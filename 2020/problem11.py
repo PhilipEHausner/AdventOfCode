@@ -1,5 +1,4 @@
 import copy
-import timeit
 
 from get_input import get_input_from_file
 

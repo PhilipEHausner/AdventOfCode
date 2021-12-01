@@ -1,5 +1,4 @@
 import re
-from collections import deque
 
 from get_input import get_input_prob7
 
