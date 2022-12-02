@@ -1,84 +1,15 @@
+mod handsign;
+mod outcome;
+mod round;
+
 use std::collections::HashMap;
-use std::fmt;
 use util::hashmap;
 use util::read_files::read_file_as_vector;
 
-#[derive(Clone, Copy)]
-enum Handsign {
-    Rock,
-    Paper,
-    Scissors,
-}
+use handsign::Handsign;
+use outcome::Outcome;
+use round::Round;
 
-impl Handsign {
-    fn get_complement(&self, outcome: &Outcome) -> Handsign {
-        match *outcome {
-            Outcome::Win => match self {
-                Handsign::Rock => Handsign::Paper,
-                Handsign::Paper => Handsign::Scissors,
-                Handsign::Scissors => Handsign::Rock,
-            },
-            Outcome::Tie => match self {
-                Handsign::Rock => Handsign::Rock,
-                Handsign::Paper => Handsign::Paper,
-                Handsign::Scissors => Handsign::Scissors,
-            },
-            Outcome::Lose => match self {
-                Handsign::Rock => Handsign::Scissors,
-                Handsign::Paper => Handsign::Rock,
-                Handsign::Scissors => Handsign::Paper,
-            },
-        }
-    }
-}
-
-impl fmt::Display for Handsign {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Handsign::Rock => write!(f, "Rock"),
-            Handsign::Paper => write!(f, "Paper"),
-            Handsign::Scissors => write!(f, "Scissors"),
-        }
-    }
-}
-
-struct Round {
-    player: Handsign,
-    opponent: Handsign,
-}
-
-enum Outcome {
-    Win,
-    Tie,
-    Lose,
-}
-
-impl Round {
-    fn points(&self) -> u64 {
-        let outcome_points = match (self.player, self.opponent) {
-            // win
-            (Handsign::Rock, Handsign::Scissors) => 6,
-            (Handsign::Paper, Handsign::Rock) => 6,
-            (Handsign::Scissors, Handsign::Paper) => 6,
-
-            // tie
-            (Handsign::Rock, Handsign::Rock) => 3,
-            (Handsign::Paper, Handsign::Paper) => 3,
-            (Handsign::Scissors, Handsign::Scissors) => 3,
-
-            // lose
-            (Handsign::Rock, Handsign::Paper) => 0,
-            (Handsign::Paper, Handsign::Scissors) => 0,
-            (Handsign::Scissors, Handsign::Rock) => 0,
-        };
-        let handsign_points = match self.player {
-            Handsign::Rock => 1,
-            Handsign::Paper => 2,
-            Handsign::Scissors => 3,
-        };
-        outcome_points + handsign_points
-    }
-}
 
 fn main() {
     let result1 = solve1("./files/day2.txt");
@@ -98,16 +29,6 @@ fn solve1(filename: &str) -> u64 {
     calculate_final_points(strategy_guide)
 }
 
-fn calculate_final_points(strategy_guide: Vec<Round>) -> u64 {
-    let mut result = 0;
-
-    for round in strategy_guide {
-        result += round.points();
-    }
-
-    result
-}
-
 fn get_strategy_guide_problem1(
     filename: &str,
     player_handsign_code: &HashMap<char, Handsign>,
@@ -121,9 +42,9 @@ fn get_strategy_guide_problem1(
         debug_assert_eq!(round.len(), 2);
         strategy_guide.push(Round {
             opponent: opponent_handsign_code
-                [&round[0].chars().next().expect("Unknown opponent handsign.")],
+                [&round[0].chars().next().expect("Unknown opponent Handsign.")],
             player: player_handsign_code
-                [&round[1].chars().next().expect("Unknown player handsign.")],
+                [&round[1].chars().next().expect("Unknown player Handsign.")],
         })
     }
 
@@ -151,9 +72,9 @@ fn get_strategy_guide_problem2(
         let round: Vec<&str> = line.split(" ").collect();
         debug_assert_eq!(round.len(), 2);
         let opponent_handsign =
-            opponent_handsign_code[&round[0].chars().next().expect("Unknown opponent handsign.")];
+            opponent_handsign_code[&round[0].chars().next().expect("Unknown opponent Handsign.")];
         let required_outcome =
-            &player_outcome_code[&round[1].chars().next().expect("Unknown player handsign.")];
+            &player_outcome_code[&round[1].chars().next().expect("Unknown player Handsign.")];
         let player_handsign = opponent_handsign.get_complement(required_outcome);
         strategy_guide.push(Round {
             opponent: opponent_handsign,
@@ -162,6 +83,16 @@ fn get_strategy_guide_problem2(
     }
 
     strategy_guide
+}
+
+fn calculate_final_points(strategy_guide: Vec<Round>) -> u64 {
+    let mut result = 0;
+
+    for round in strategy_guide {
+        result += round.points();
+    }
+
+    result
 }
 
 #[cfg(test)]
