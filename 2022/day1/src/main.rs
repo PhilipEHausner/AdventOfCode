@@ -1,6 +1,6 @@
 use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
+use std::io;
+use util::read_files::read_lines;
 
 fn main() {
     let elve_inventories = build_elve_inventories_from_file("./src/day1.txt");
@@ -55,14 +55,6 @@ fn solve2(elve_inventories: &Vec<Vec<u64>>) -> u64 {
         .collect::<Vec<u64>>();
     calories_carried.sort_by(|a, b| b.cmp(a));
     calories_carried[..3].iter().sum()
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
 }
 
 #[cfg(test)]
