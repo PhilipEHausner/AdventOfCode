@@ -40,9 +40,9 @@ fn solve2(filename: &str) -> u64 {
 
     let mut result = 0;
     for i in (0..backpacks.len()).step_by(3) {
-        result += priority_of_group_badge(&backpacks[i], &backpacks[i+1],&backpacks[i+2]);
+        result += priority_of_group_badge(&backpacks[i], &backpacks[i + 1], &backpacks[i + 2]);
     }
-    
+
     result
 }
 
@@ -51,7 +51,9 @@ fn priority_of_group_badge(backpack1: &str, backpack2: &str, backpack3: &str) ->
     let items3: HashSet<char> = HashSet::from_iter(backpack3.chars());
 
     for item in backpack1.chars() {
-        if items2.contains(&item) &&  items3.contains(&item) { return get_item_priority(item); }
+        if items2.contains(&item) && items3.contains(&item) {
+            return get_item_priority(item);
+        }
     }
 
     0
