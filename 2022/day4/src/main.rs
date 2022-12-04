@@ -1,3 +1,5 @@
+use std::cmp;
+
 use util::read_files::read_file_as_vector;
 
 struct AssignmentRange {
@@ -21,11 +23,20 @@ impl ElvePair {
             false
         }
     }
+
+    pub fn overlapping_fields(&self) -> u64 {
+        let (start1, end1) = (self.assignment_elve1.start as i64, self.assignment_elve1.end as i64);
+        let (start2, end2) = (self.assignment_elve2.start as i64, self.assignment_elve2.end as i64);
+
+        cmp::max(cmp::min(end1, end2) - cmp::max(start1, start2) + 1, 0) as u64
+    }
 }
 
 fn main() {
     let solution1 = solve1("./files/day4.txt");
     println!("Solution problem1: {}", solution1);
+    let solution2 = solve2("./files/day4.txt");
+    println!("Solution problem2: {}", solution2);
 }
 
 fn solve1(filename: &str) -> u64 {
@@ -34,6 +45,15 @@ fn solve1(filename: &str) -> u64 {
     elve_pairs
         .iter()
         .map(|pair| if pair.do_fully_overlap() { 1 } else { 0 })
+        .sum()
+}
+
+fn solve2(filename: &str) -> u64 {
+    let lines = read_file_as_vector(filename).expect("Error reading file.");
+    let elve_pairs = get_elve_pairs(&lines);
+    elve_pairs
+        .iter()
+        .map(|pair| if pair.overlapping_fields() > 0 { 1 } else { 0 })
         .sum()
 }
 
@@ -70,6 +90,11 @@ mod tests {
     }
 
     #[test]
+    fn test_solve2() {
+        assert_eq!(solve2("./files/test.txt"), 4);
+    }
+
+    #[test]
     fn test_elve_pairs_do_fully_overlap() {
         test_elve_pairs_do_fully_overlap_helper(1, 4, 2, 3, true);
         test_elve_pairs_do_fully_overlap_helper(2, 3, 1, 4, true);
@@ -101,6 +126,43 @@ mod tests {
         };
         assert_eq!(
             pair.do_fully_overlap(),
+            outcome,
+            "Ranges are: {} - {} and {} - {}, expected outcome: {}",
+            start1,
+            end1,
+            start2,
+            end2,
+            outcome
+        );
+    }
+
+    #[test]
+    fn test_elve_pairs_overlapping_fields() {
+        test_elve_pairs_overlapping_fields_helper(2, 5, 3, 4, 2);
+        test_elve_pairs_overlapping_fields_helper(2, 4, 3, 5, 2);
+        test_elve_pairs_overlapping_fields_helper(2, 4, 5, 7, 0);
+        test_elve_pairs_overlapping_fields_helper(2, 4, 2, 4, 3);
+    }
+
+    fn test_elve_pairs_overlapping_fields_helper(
+        start1: u64,
+        end1: u64,
+        start2: u64,
+        end2: u64,
+        outcome: u64,
+    ) {
+        let pair = ElvePair {
+            assignment_elve1: AssignmentRange {
+                start: start1,
+                end: end1,
+            },
+            assignment_elve2: AssignmentRange {
+                start: start2,
+                end: end2,
+            },
+        };
+        assert_eq!(
+            pair.overlapping_fields(),
             outcome,
             "Ranges are: {} - {} and {} - {}, expected outcome: {}",
             start1,
