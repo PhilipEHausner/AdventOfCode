@@ -13,6 +13,8 @@ fn main() {
     let lines = read_file_as_vector("./files/day5.txt").expect("Error reading file.");
     let solution1 = solve1(&lines);
     println!("Solution part1: {}", solution1);
+    let solution2 = solve2(&lines);
+    println!("Solution part2: {}", solution2);
 }
 
 fn solve1(lines: &Vec<String>) -> String {
@@ -28,6 +30,31 @@ fn solve1(lines: &Vec<String>) -> String {
             let moved_element = stacks[mov.from].pop().unwrap();
             stacks[mov.to].push(moved_element);
         }
+    }
+
+    stacks
+        .iter()
+        .map(|v| *v.last().unwrap())
+        .collect::<Vec<char>>()
+        .into_iter()
+        .collect::<String>()
+}
+
+fn solve2(lines: &Vec<String>) -> String {
+    let mut stacks = initialize_stacks(lines);
+    let moves = create_moves(lines);
+
+    for mov in moves {
+        let mut moved_elements = vec![];
+        for _ in 0..mov.num_elements {
+            if stacks[mov.from].is_empty() {
+                break;
+            };
+
+            moved_elements.push(stacks[mov.from].pop().unwrap());
+        }
+        moved_elements.reverse();
+        stacks[mov.to].append(&mut moved_elements);
     }
 
     stacks
@@ -130,5 +157,11 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), "CMZ", "solve1 failed.");
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), "MCD", "solve2 failed.");
     }
 }
