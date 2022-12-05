@@ -18,51 +18,23 @@ fn main() {
 }
 
 fn solve1(lines: &Vec<String>) -> String {
-    let mut stacks = initialize_stacks(lines);
-    let moves = create_moves(lines);
-
-    for mov in moves {
-        for _ in 0..mov.num_elements {
-            if stacks[mov.from].is_empty() {
-                break;
-            };
-
-            let moved_element = stacks[mov.from].pop().unwrap();
-            stacks[mov.to].push(moved_element);
-        }
-    }
-
-    stacks
-        .iter()
-        .map(|v| *v.last().unwrap())
-        .collect::<Vec<char>>()
-        .into_iter()
-        .collect::<String>()
+    solve_generic(lines, &crane_solve1)
 }
 
 fn solve2(lines: &Vec<String>) -> String {
+    solve_generic(lines, &crane_solve2)
+}
+
+fn solve_generic(
+    lines: &Vec<String>,
+    crane_version: &dyn Fn(&mut Vec<Stack>, Vec<Move>),
+) -> String {
     let mut stacks = initialize_stacks(lines);
     let moves = create_moves(lines);
 
-    for mov in moves {
-        let mut moved_elements = vec![];
-        for _ in 0..mov.num_elements {
-            if stacks[mov.from].is_empty() {
-                break;
-            };
+    crane_version(&mut stacks, moves);
 
-            moved_elements.push(stacks[mov.from].pop().unwrap());
-        }
-        moved_elements.reverse();
-        stacks[mov.to].append(&mut moved_elements);
-    }
-
-    stacks
-        .iter()
-        .map(|v| *v.last().unwrap())
-        .collect::<Vec<char>>()
-        .into_iter()
-        .collect::<String>()
+    build_result_string(stacks)
 }
 
 fn initialize_stacks(lines: &Vec<String>) -> Vec<Stack> {
@@ -132,6 +104,43 @@ fn create_moves(lines: &Vec<String>) -> Vec<Move> {
     }
 
     moves
+}
+
+fn crane_solve1(stacks: &mut Vec<Stack>, moves: Vec<Move>) {
+    for mov in moves {
+        for _ in 0..mov.num_elements {
+            if stacks[mov.from].is_empty() {
+                break;
+            };
+
+            let moved_element = stacks[mov.from].pop().unwrap();
+            stacks[mov.to].push(moved_element);
+        }
+    }
+}
+
+fn crane_solve2(stacks: &mut Vec<Stack>, moves: Vec<Move>) {
+    for mov in moves {
+        let mut moved_elements = vec![];
+        for _ in 0..mov.num_elements {
+            if stacks[mov.from].is_empty() {
+                break;
+            };
+
+            moved_elements.push(stacks[mov.from].pop().unwrap());
+        }
+        moved_elements.reverse();
+        stacks[mov.to].append(&mut moved_elements);
+    }
+}
+
+fn build_result_string(stacks: Vec<Stack>) -> String {
+    stacks
+        .iter()
+        .map(|v| *v.last().unwrap())
+        .collect::<Vec<char>>()
+        .into_iter()
+        .collect::<String>()
 }
 
 #[cfg(test)]
