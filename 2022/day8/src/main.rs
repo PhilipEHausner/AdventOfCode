@@ -19,7 +19,14 @@ fn solve1(lines: &Vec<String>) -> u64 {
     process_col_top_to_bot(&mut grid, &mut visible);
     process_col_bot_to_top(&mut grid, &mut visible);
 
-    visible.iter().map(|row| row.iter().map(|el| if *el == true {1} else {0}).sum::<u64>()).sum()
+    visible
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|el| if *el == true { 1 } else { 0 })
+                .sum::<u64>()
+        })
+        .sum()
 }
 
 fn solve2(lines: &Vec<String>) -> u64 {
@@ -32,11 +39,23 @@ fn solve2(lines: &Vec<String>) -> u64 {
         }
     }
 
-    scenic_scores.iter().map(|row| *row.iter().max().unwrap()).max().unwrap()
+    scenic_scores
+        .iter()
+        .map(|row| *row.iter().max().unwrap())
+        .max()
+        .unwrap()
 }
 
 fn create_grid(lines: &Vec<String>) -> Grid {
-    lines.iter().map(|line| line.chars().into_iter().map(|c| c.to_digit(10).unwrap() as u8).collect()).collect()
+    lines
+        .iter()
+        .map(|line| {
+            line.chars()
+                .into_iter()
+                .map(|c| c.to_digit(10).unwrap() as u8)
+                .collect()
+        })
+        .collect()
 }
 
 fn process_row_left_to_right(grid: &mut Grid, visible: &mut BoolGrid) {
@@ -81,7 +100,13 @@ fn process_col_bot_to_top(grid: &mut Grid, visible: &mut BoolGrid) {
     }
 }
 
-fn update_row_col_entry(grid: &mut Grid, visible: &mut BoolGrid, curr_highest: &mut u8, row: usize, col: usize) {
+fn update_row_col_entry(
+    grid: &mut Grid,
+    visible: &mut BoolGrid,
+    curr_highest: &mut u8,
+    row: usize,
+    col: usize,
+) {
     if grid[row][col] > *curr_highest {
         visible[row][col] = true;
         *curr_highest = grid[row][col];
@@ -117,7 +142,7 @@ fn scenic_score_bot(grid: &mut Grid, row: usize, col: usize) -> u64 {
     let mut result = 0;
 
     let tree_size = grid[row][col];
-    for i in (row+1)..grid.len() {
+    for i in (row + 1)..grid.len() {
         result += 1;
         if grid[i][col] >= tree_size {
             break;
@@ -145,12 +170,11 @@ fn scenic_score_right(grid: &mut Grid, row: usize, col: usize) -> u64 {
     let mut result = 0;
 
     let tree_size = grid[row][col];
-    for i in (col+1)..grid[row].len() {
+    for i in (col + 1)..grid[row].len() {
         result += 1;
         if grid[row][i] >= tree_size {
             break;
         }
-        
     }
 
     result
