@@ -9,73 +9,26 @@ fn main() {
 }
 
 fn solve1(lines: &Vec<String>) -> u64 {
-    let mut visited = HashSet::<(i32, i32)>::new();
-    let mut head = (0, 0);
-    let mut tail = (0, 0);
-    visited.insert((0, 0));
-
-    for line in lines {
-        process_move_head_tail(line, &mut visited, &mut head, &mut tail);
-    }
-
-    visited.len() as u64
+    solve_generic(lines, 2)
 }
 
 fn solve2(lines: &Vec<String>) -> u64 {
+    solve_generic(lines, 10)
+}
+
+fn solve_generic(lines: &Vec<String>, total_knots: usize) -> u64 {
     let mut visited = HashSet::<(i32, i32)>::new();
-    let mut knots = vec![(0, 0); 10];
+    let mut knots = vec![(0, 0); total_knots];
     visited.insert((0, 0));
 
     for line in lines {
-        process_move_multiple_knots(line, &mut visited, &mut knots);
+        process_move(line, &mut visited, &mut knots);
     }
 
     visited.len() as u64
 }
 
-fn process_move_head_tail(
-    line: &String,
-    visited: &mut HashSet<(i32, i32)>,
-    head: &mut (i32, i32),
-    tail: &mut (i32, i32),
-) {
-    let mov = line.split(" ").collect::<Vec<&str>>();
-    let direction = mov[0];
-    let distance = mov[1]
-        .parse::<u32>()
-        .expect("Distance is not a valid number.");
-
-    for _ in 0..distance {
-        march_in_direction(direction, head, tail, visited)
-    }
-}
-
-fn march_in_direction(
-    direction: &str,
-    head: &mut (i32, i32),
-    tail: &mut (i32, i32),
-    visited: &mut HashSet<(i32, i32)>,
-) {
-    match direction {
-        "U" => {
-            head.1 -= 1;
-        }
-        "D" => {
-            head.1 += 1;
-        }
-        "R" => {
-            head.0 += 1;
-        }
-        "L" => {
-            head.0 -= 1;
-        }
-        _ => panic!("Invalid movement"),
-    }
-
-    process_knot(tail, *head, visited, true);
-}
-
-fn process_move_multiple_knots(
+fn process_move(
     line: &String,
     visited: &mut HashSet<(i32, i32)>,
     knots: &mut Vec<(i32, i32)>,
@@ -87,11 +40,11 @@ fn process_move_multiple_knots(
         .expect("Distance is not a valid number.");
 
     for _ in 0..distance {
-        march_in_direction_multiple_knots(direction, knots, visited);
+        march_in_direction(direction, knots, visited);
     }
 }
 
-fn march_in_direction_multiple_knots(
+fn march_in_direction(
     direction: &str,
     knots: &mut Vec<(i32, i32)>,
     visited: &mut HashSet<(i32, i32)>,
