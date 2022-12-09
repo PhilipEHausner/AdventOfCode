@@ -45,33 +45,34 @@ fn process_move_head_tail(
         .parse::<u32>()
         .expect("Distance is not a valid number.");
 
+    for _ in 0..distance {
+        march_in_direction(direction, head, tail, visited)
+    }
+}
+
+fn march_in_direction(
+    direction: &str,
+    head: &mut (i32, i32),
+    tail: &mut (i32, i32),
+    visited: &mut HashSet<(i32, i32)>,
+) {
     match direction {
         "U" => {
-            for _ in 0..distance {
-                head.1 -= 1;
-                process_knot(tail, *head, visited, true);
-            }
+            head.1 -= 1;
         }
         "D" => {
-            for _ in 0..distance {
-                head.1 += 1;
-                process_knot(tail, *head, visited, true);
-            }
+            head.1 += 1;
         }
         "R" => {
-            for _ in 0..distance {
-                head.0 += 1;
-                process_knot(tail, *head, visited, true);
-            }
+            head.0 += 1;
         }
         "L" => {
-            for _ in 0..distance {
-                head.0 -= 1;
-                process_knot(tail, *head, visited, true);
-            }
+            head.0 -= 1;
         }
         _ => panic!("Invalid movement"),
     }
+
+    process_knot(tail, *head, visited, true);
 }
 
 fn process_move_multiple_knots(
@@ -84,50 +85,47 @@ fn process_move_multiple_knots(
     let distance = mov[1]
         .parse::<u32>()
         .expect("Distance is not a valid number.");
+
+    for _ in 0..distance {
+        march_in_direction_multiple_knots(direction, knots, visited);
+    }
+}
+
+fn march_in_direction_multiple_knots(
+    direction: &str,
+    knots: &mut Vec<(i32, i32)>,
+    visited: &mut HashSet<(i32, i32)>,
+) {
     let num_knots = knots.len();
 
     match direction {
         "U" => {
-            for _ in 0..distance {
-                knots[0].1 -= 1;
-                for ind in 1..knots.len() {
-                    let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    let is_tail_knot = is_tail(num_knots, ind);
-                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
-                }
-            }
+            knots[0].1 -= 1;
         }
         "D" => {
-            for _ in 0..distance {
-                knots[0].1 += 1;
-                for ind in 1..knots.len() {
-                    let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    let is_tail_knot = is_tail(num_knots, ind);
-                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
-                }
-            }
+            knots[0].1 += 1;
         }
         "R" => {
-            for _ in 0..distance {
-                knots[0].0 += 1;
-                for ind in 1..knots.len() {
-                    let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    let is_tail_knot = is_tail(num_knots, ind);
-                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
-                }
-            }
+            knots[0].0 += 1;
         }
         "L" => {
-            for _ in 0..distance {
-                knots[0].0 -= 1;
-                for ind in 1..knots.len() {
-                    let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    let is_tail_knot = is_tail(num_knots, ind);
-                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
-                }
-            }
+            knots[0].0 -= 1;
         }
         _ => panic!("Invalid movement"),
+    }
+
+    process_knot_vector(knots, num_knots, visited);
+}
+
+fn process_knot_vector(
+    knots: &mut Vec<(i32, i32)>,
+    num_knots: usize,
+    visited: &mut HashSet<(i32, i32)>,
+) {
+    for ind in 1..knots.len() {
+        let target = (knots[ind - 1].0, knots[ind - 1].1);
+        let is_tail_knot = is_tail(num_knots, ind);
+        process_knot(&mut knots[ind], target, visited, is_tail_knot);
     }
 }
 
@@ -135,8 +133,12 @@ fn is_tail(num_knots: usize, curr_index: usize) -> bool {
     num_knots - 1 == curr_index
 }
 
-
-fn process_knot(knot: &mut (i32, i32), target: (i32, i32), visited: &mut HashSet<(i32, i32)>, is_tail_knot: bool) {
+fn process_knot(
+    knot: &mut (i32, i32),
+    target: (i32, i32),
+    visited: &mut HashSet<(i32, i32)>,
+    is_tail_knot: bool,
+) {
     move_knot_if_necessary(knot, target);
     if is_tail_knot {
         visited.insert(*knot);
