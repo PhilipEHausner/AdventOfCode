@@ -49,33 +49,25 @@ fn process_move_head_tail(
         "U" => {
             for _ in 0..distance {
                 head.1 -= 1;
-                if !knots_are_neighbours(head, tail) {
-                    move_tail(visited, tail, (head.0, head.1 + 1));
-                }
+                process_knot(tail, *head, visited, true);
             }
         }
         "D" => {
             for _ in 0..distance {
                 head.1 += 1;
-                if !knots_are_neighbours(head, tail) {
-                    move_tail(visited, tail, (head.0, head.1 - 1));
-                }
+                process_knot(tail, *head, visited, true);
             }
         }
         "R" => {
             for _ in 0..distance {
                 head.0 += 1;
-                if !knots_are_neighbours(head, tail) {
-                    move_tail(visited, tail, (head.0 - 1, head.1));
-                }
+                process_knot(tail, *head, visited, true);
             }
         }
         "L" => {
             for _ in 0..distance {
                 head.0 -= 1;
-                if !knots_are_neighbours(head, tail) {
-                    move_tail(visited, tail, (head.0 + 1, head.1));
-                }
+                process_knot(tail, *head, visited, true);
             }
         }
         _ => panic!("Invalid movement"),
@@ -92,20 +84,16 @@ fn process_move_multiple_knots(
     let distance = mov[1]
         .parse::<u32>()
         .expect("Distance is not a valid number.");
+    let num_knots = knots.len();
 
     match direction {
         "U" => {
             for _ in 0..distance {
                 knots[0].1 -= 1;
                 for ind in 1..knots.len() {
-                    if knots_are_neighbours(&knots[ind], &knots[ind - 1]) {
-                        continue;
-                    }
                     let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    move_knot2(&mut knots[ind], target);
-                    if is_tail(knots.len(), ind) {
-                        visited.insert(knots[ind]);
-                    }
+                    let is_tail_knot = is_tail(num_knots, ind);
+                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
                 }
             }
         }
@@ -113,14 +101,9 @@ fn process_move_multiple_knots(
             for _ in 0..distance {
                 knots[0].1 += 1;
                 for ind in 1..knots.len() {
-                    if knots_are_neighbours(&knots[ind], &knots[ind - 1]) {
-                        continue;
-                    }
                     let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    move_knot2(&mut knots[ind], target);
-                    if is_tail(knots.len(), ind) {
-                        visited.insert(knots[ind]);
-                    }
+                    let is_tail_knot = is_tail(num_knots, ind);
+                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
                 }
             }
         }
@@ -128,14 +111,9 @@ fn process_move_multiple_knots(
             for _ in 0..distance {
                 knots[0].0 += 1;
                 for ind in 1..knots.len() {
-                    if knots_are_neighbours(&knots[ind], &knots[ind - 1]) {
-                        continue;
-                    }
                     let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    move_knot2(&mut knots[ind], target);
-                    if is_tail(knots.len(), ind) {
-                        visited.insert(knots[ind]);
-                    }
+                    let is_tail_knot = is_tail(num_knots, ind);
+                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
                 }
             }
         }
@@ -143,14 +121,9 @@ fn process_move_multiple_knots(
             for _ in 0..distance {
                 knots[0].0 -= 1;
                 for ind in 1..knots.len() {
-                    if knots_are_neighbours(&knots[ind], &knots[ind - 1]) {
-                        continue;
-                    }
                     let target = (knots[ind - 1].0, knots[ind - 1].1);
-                    move_knot2(&mut knots[ind], target);
-                    if is_tail(knots.len(), ind) {
-                        visited.insert(knots[ind]);
-                    }
+                    let is_tail_knot = is_tail(num_knots, ind);
+                    process_knot(&mut knots[ind], target, visited, is_tail_knot);
                 }
             }
         }
@@ -158,27 +131,22 @@ fn process_move_multiple_knots(
     }
 }
 
-fn knots_are_neighbours(knot1: &(i32, i32), knot2: &(i32, i32)) -> bool {
-    let x_diff = (knot1.0 - knot2.0).abs();
-    let y_diff = (knot1.1 - knot2.1).abs();
-    x_diff <= 1 && y_diff <= 1
-}
-
-fn move_knot(knot: &mut (i32, i32), target: (i32, i32)) {
-    knot.0 = target.0;
-    knot.1 = target.1;
-}
-
-fn move_tail(visited: &mut HashSet<(i32, i32)>, tail: &mut (i32, i32), target: (i32, i32)) {
-    visited.insert(target);
-    move_knot(tail, target);
-}
-
 fn is_tail(num_knots: usize, curr_index: usize) -> bool {
     num_knots - 1 == curr_index
 }
 
-fn move_knot2(knot: &mut (i32, i32), target: (i32, i32)) {
+
+fn process_knot(knot: &mut (i32, i32), target: (i32, i32), visited: &mut HashSet<(i32, i32)>, is_tail_knot: bool) {
+    move_knot_if_necessary(knot, target);
+    if is_tail_knot {
+        visited.insert(*knot);
+    }
+}
+
+fn move_knot_if_necessary(knot: &mut (i32, i32), target: (i32, i32)) {
+    if knots_are_neighbours(knot, &target) {
+        return;
+    }
     if knot.0 - target.0 > 0 {
         knot.0 -= 1;
     } else if target.0 - knot.0 > 0 {
@@ -191,14 +159,27 @@ fn move_knot2(knot: &mut (i32, i32), target: (i32, i32)) {
     }
 }
 
+fn knots_are_neighbours(knot1: &(i32, i32), knot2: &(i32, i32)) -> bool {
+    let x_diff = (knot1.0 - knot2.0).abs();
+    let y_diff = (knot1.1 - knot2.1).abs();
+    x_diff <= 1 && y_diff <= 1
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_solve1() {
+    fn test_solve1_small() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), 13);
+    }
+
+    #[test]
+    fn test_solve1_dataset() {
+        let lines = read_file_as_vector("./files/day9.txt").expect("Error reading file.");
+        assert_eq!(solve1(&lines), 6057);
     }
 
     #[test]
@@ -214,31 +195,8 @@ mod tests {
     }
 
     #[test]
-    fn test_move_knot2() {
-        let target = (0, 0);
-
-        let mut knot = (2, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (1, 1));
-
-        knot = (1, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (0, 1));
-
-        knot = (0, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (0, 1));
-
-        knot = (0, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (0, 1));
-
-        knot = (-1, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (0, 1));
-
-        knot = (-2, 2);
-        move_knot2(&mut knot, target);
-        assert_eq!(knot, (-1, 1));
+    fn test_solve2_dataset() {
+        let lines = read_file_as_vector("./files/day9.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 2514);
     }
 }
