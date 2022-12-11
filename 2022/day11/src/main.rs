@@ -23,8 +23,11 @@ fn solve_generic(lines: &Vec<String>, rounds: usize, worry_decay: u64) -> u64 {
     for _ in 0..rounds {
         monkey_round(&mut monkeys);
     }
-    
-    let mut inspections = monkeys.iter().map(|monkey| monkey.num_inspected_items()).collect::<Vec<u64>>();
+
+    let mut inspections = monkeys
+        .iter()
+        .map(|monkey| monkey.num_inspected_items())
+        .collect::<Vec<u64>>();
     inspections.sort_by_key(|&w| std::cmp::Reverse(w));
     inspections[0] * inspections[1]
 }
@@ -55,7 +58,10 @@ fn parse_monkeys(lines: &Vec<String>, worry_decay: u64) -> Vec<Monkey> {
 }
 
 fn set_modulo_ring(monkeys: &mut Vec<Monkey>) {
-    let modulo_ring = monkeys.iter().map(|monkey| monkey.get_decision_test()).product();
+    let modulo_ring = monkeys
+        .iter()
+        .map(|monkey| monkey.get_decision_test())
+        .product();
     for monkey in monkeys {
         monkey.set_modulo_ring(modulo_ring);
     }

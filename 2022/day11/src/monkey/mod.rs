@@ -71,7 +71,7 @@ impl Monkey {
         self.inspected_items
     }
 
-    pub fn get_decision_test(&self) -> u64{
+    pub fn get_decision_test(&self) -> u64 {
         self.decision_test
     }
 
