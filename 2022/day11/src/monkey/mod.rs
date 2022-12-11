@@ -21,6 +21,7 @@ pub struct Monkey {
     decision_false: usize,
     worry_decay: u64,
     inspected_items: u64,
+    modulo_ring: u64,
 }
 
 impl Monkey {
@@ -59,7 +60,7 @@ impl Monkey {
             }
         }
         worry_level /= self.worry_decay;
-        worry_level
+        worry_level % self.modulo_ring
     }
 
     pub fn push_item(&mut self, item_worry_level: u64) {
@@ -68,6 +69,14 @@ impl Monkey {
 
     pub fn num_inspected_items(&self) -> u64 {
         self.inspected_items
+    }
+
+    pub fn get_decision_test(&self) -> u64{
+        self.decision_test
+    }
+
+    pub fn set_modulo_ring(&mut self, modulo_ring: u64) {
+        self.modulo_ring = modulo_ring;
     }
 }
 
@@ -98,6 +107,7 @@ impl Monkey {
             decision_false: m_decision_false,
             inspected_items: 0,
             worry_decay,
+            modulo_ring: 0,
         }
     }
 
