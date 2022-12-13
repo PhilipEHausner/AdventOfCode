@@ -58,6 +58,7 @@ fn in_right_order(list1: &List, list2: &List) -> Bool {
 fn main() {
     let lines = read_file_as_vector("./files/day13.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>)-> u64 {
@@ -73,6 +74,37 @@ fn solve1(lines: &Vec<String>)-> u64 {
     }
 
     result as u64
+}
+
+fn solve2(lines: &Vec<String>) -> u64 {
+    let input = parse_input(lines);
+    let mut divider1_place = 1;
+    let mut divider2_place = 1;
+    let mut packets = vec![parse_line("[[2]]"), parse_line("[[6]]")];
+
+    for (l1, l2) in input {
+        packets.push(l1);
+        packets.push(l2);
+    }
+
+    let divider1 = parse_line("[[2]]");
+    let divider2 = parse_line("[[6]]");
+
+    for packet in packets {
+        let divider1_is_right = in_right_order(&packet, &divider1);
+        let divider2_is_right = in_right_order(&packet, &divider2);
+
+        match divider1_is_right {
+            Bool::True => { divider1_place += 1; },
+            _ => {},
+        }
+        match divider2_is_right {
+            Bool::True => { divider2_place += 1; },
+            _ => {},
+        }
+    }
+
+    divider1_place * divider2_place
 }
 
 fn parse_input(lines: &Vec<String>) -> Vec<(List, List)> {
@@ -156,5 +188,11 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), 13);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 140);
     }
 }
