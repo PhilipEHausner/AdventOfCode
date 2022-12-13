@@ -10,7 +10,7 @@ enum List {
 enum Bool {
     True,
     False,
-    Neutral,    
+    Neutral,
 }
 
 fn in_right_order(list1: &List, list2: &List) -> Bool {
@@ -23,7 +23,7 @@ fn in_right_order(list1: &List, list2: &List) -> Bool {
             } else {
                 return Bool::True;
             }
-        },
+        }
         (List::ListElements(x_vec), List::ListElements(y_vec)) => {
             let max_index = x_vec.len().max(y_vec.len());
 
@@ -38,20 +38,20 @@ fn in_right_order(list1: &List, list2: &List) -> Bool {
 
                 let is_right = in_right_order(&l1, &l2);
                 match is_right {
-                    Bool::Neutral => {},
+                    Bool::Neutral => {}
                     _ => return is_right,
                 }
             }
             return Bool::Neutral;
-        },
+        }
         (List::Value(x), List::ListElements(_)) => {
             let l1 = List::ListElements(vec![Box::new(List::Value(*x))]);
             return in_right_order(&l1, list2);
-        },
+        }
         (List::ListElements(_), List::Value(y)) => {
             let l2 = List::ListElements(vec![Box::new(List::Value(*y))]);
             return in_right_order(list1, &l2);
-        },
+        }
     }
 }
 
@@ -61,15 +61,15 @@ fn main() {
     println!("Solution part 2: {}", solve2(&lines));
 }
 
-fn solve1(lines: &Vec<String>)-> u64 {
+fn solve1(lines: &Vec<String>) -> u64 {
     let input = parse_input(lines);
     let mut result = 0;
 
     for (i, (l1, l2)) in input.iter().enumerate() {
         let is_right = in_right_order(&l1, &l2);
         match is_right {
-            Bool::False => {},
-            _ => {result += i + 1}
+            Bool::False => {}
+            _ => result += i + 1,
         }
     }
 
@@ -95,12 +95,16 @@ fn solve2(lines: &Vec<String>) -> u64 {
         let divider2_is_right = in_right_order(&packet, &divider2);
 
         match divider1_is_right {
-            Bool::True => { divider1_place += 1; },
-            _ => {},
+            Bool::True => {
+                divider1_place += 1;
+            }
+            _ => {}
         }
         match divider2_is_right {
-            Bool::True => { divider2_place += 1; },
-            _ => {},
+            Bool::True => {
+                divider2_place += 1;
+            }
+            _ => {}
         }
     }
 
@@ -111,8 +115,8 @@ fn parse_input(lines: &Vec<String>) -> Vec<(List, List)> {
     let mut lists = vec![];
 
     for i in (0..lines.len()).step_by(3) {
-        let list1 = parse_line(&lines[i][1..lines[i].len()-1]);
-        let list2 = parse_line(&lines[i+1][1..lines[i+1].len()-1]);
+        let list1 = parse_line(&lines[i][1..lines[i].len() - 1]);
+        let list2 = parse_line(&lines[i + 1][1..lines[i + 1].len() - 1]);
         lists.push((list1, list2));
     }
 
@@ -144,19 +148,18 @@ fn parse_line(line: &str) -> List {
 
         if curr_char == '[' {
             let end_brackets = matching_end_bracket(line, i);
-            let sublist = parse_line(&line[i+1..end_brackets]);
+            let sublist = parse_line(&line[i + 1..end_brackets]);
             result.push(Box::new(sublist));
             bracket_count += 1;
         } else {
             let end_comma = line[i..].find(|c| c == ',' || c == ']');
             let number = match end_comma {
-                Some(x) => line[i..i+x].parse().unwrap(),
+                Some(x) => line[i..i + x].parse().unwrap(),
                 None => line[i..].parse().unwrap(),
             };
             result.push(Box::new(List::Value(number)));
             comma_skip = true;
         }
-
     }
 
     List::ListElements(result)
@@ -165,7 +168,7 @@ fn parse_line(line: &str) -> List {
 fn matching_end_bracket(line: &str, bracket_index: usize) -> usize {
     let result = 0;
     let mut bracket_count = 0;
-    for i in bracket_index+1..line.len() {
+    for i in bracket_index + 1..line.len() {
         let curr_char = line.chars().nth(i).unwrap();
         if curr_char == '[' {
             bracket_count += 1;
