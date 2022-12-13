@@ -87,7 +87,11 @@ fn get_all_zero_elevation_points(grid: &Vec<Vec<u8>>) -> Vec<(usize, usize)> {
         .collect()
 }
 
-fn shortest_path(grid: &Vec<Vec<u8>>, start_point: (usize, usize), end_point: (usize, usize)) -> u64 {
+fn shortest_path(
+    grid: &Vec<Vec<u8>>,
+    start_point: (usize, usize),
+    end_point: (usize, usize),
+) -> u64 {
     let mut visited = vec![vec![false; grid[0].len()]; grid.len()];
     let mut distances = vec![vec![u64::MAX; grid[0].len()]; grid.len()];
     let mut input_queue = VecDeque::from([(start_point, 0)]);
