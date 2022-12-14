@@ -1,17 +1,28 @@
-use std::cmp;
+use std::{cmp, vec};
 
 use util::read_files::read_file_as_vector;
+
 
 fn main() {
     let lines = read_file_as_vector("./files/day14.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>) -> u64 {
     let mut cave = create_cave(lines);
+    how_much_sand_flows(&mut cave)
+}
 
+fn solve2(lines: &Vec<String>) -> u64 {
+    let mut cave = create_cave(lines);
+    create_floor(&mut cave);
+    how_much_sand_flows(&mut cave)
+}
+
+fn how_much_sand_flows(cave: &mut Vec<Vec<char>>) -> u64 {
     let mut units_of_sand = 0;
-    while throw_sand(&mut cave) {
+    while throw_sand(cave) {
         units_of_sand += 1;
     }
 
@@ -52,6 +63,10 @@ fn create_cave(lines: &Vec<String>) -> Vec<Vec<char>> {
 fn throw_sand(cave: &mut Vec<Vec<char>>) -> bool {
     let mut sand_pos = (0, 500);
 
+    if cave[sand_pos.0][sand_pos.1] != '.' {
+        return false;
+    }
+
     loop {
         if sand_pos.0 >= cave.len() - 1 {
             return false;
@@ -75,6 +90,11 @@ fn throw_sand(cave: &mut Vec<Vec<char>>) -> bool {
     true
 }
 
+fn create_floor(cave: &mut Vec<Vec<char>>) {
+    let floor_level = cave.iter().enumerate().map(|(i,row)| if row.contains(&'#') { i } else { 0 }).max().unwrap() + 2;
+
+    cave[floor_level] = vec!['#'; 1000];
+}
 
 #[cfg(test)]
 mod tests {
@@ -84,5 +104,11 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), 24);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 93);
     }
 }
