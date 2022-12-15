@@ -16,7 +16,7 @@ struct Sensor {
 }
 
 impl Sensor {
-    pub fn point_in_range(&self, point: & Point) -> bool {
+    pub fn point_in_range(&self, point: &Point) -> bool {
         manhattan_distance(&self.point, &point) <= self.range
     }
 }
@@ -37,8 +37,8 @@ fn solve1(lines: &Vec<String>, y: i64) -> u64 {
     let (min_x, max_x) = get_min_and_max_x(&sensors_and_beacons);
 
     let mut result = 0;
-    for x in min_x..max_x+1 {
-        if field_has_no_beacon(&sensors_and_beacons, &Point {x, y}) {
+    for x in min_x..max_x + 1 {
+        if field_has_no_beacon(&sensors_and_beacons, &Point { x, y }) {
             result += 1;
         }
     }
@@ -52,8 +52,13 @@ fn solve2(lines: &Vec<String>, max_coord: i64) -> i64 {
     let mut intervals = vec![vec![]; (max_coord + 1) as usize];
 
     for (sensor, _) in &sensors_and_beacons {
-        for i in cmp::max(0, sensor.point.y - sensor.range as i64)..cmp::min(max_coord+1, sensor.point.y + sensor.range as i64) {
-            let (min_x, max_x) = (sensor.point.x - (sensor.range as i64 - (sensor.point.y - i).abs()), sensor.point.x + (sensor.range as i64 - (sensor.point.y - i).abs()));
+        for i in cmp::max(0, sensor.point.y - sensor.range as i64)
+            ..cmp::min(max_coord + 1, sensor.point.y + sensor.range as i64)
+        {
+            let (min_x, max_x) = (
+                sensor.point.x - (sensor.range as i64 - (sensor.point.y - i).abs()),
+                sensor.point.x + (sensor.range as i64 - (sensor.point.y - i).abs()),
+            );
             intervals[i as usize].push((min_x, max_x));
         }
     }
