@@ -14,6 +14,7 @@ struct Valve {
 fn main() {
     let lines = read_file_as_vector("./files/day16.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>) -> u64 {
@@ -23,17 +24,17 @@ fn solve1(lines: &Vec<String>) -> u64 {
     remove_zero_flow_nodes(&mut adjacency_mat, &mut flow_rates);
     include_valve_opening(&mut adjacency_mat);
 
-    for valve in valves {
-        println!("{:?}", valve);
-    }
-
-    for adj in &adjacency_mat {
-        println!("{:?}", adj);
-    }
-
-    println!("FLOW RATES: {:?}", flow_rates);
-
     find_best_path(&adjacency_mat, &flow_rates)
+}
+
+fn solve2(lines: &Vec<String>) -> u64 {
+    let valves = create_valves(lines);
+    let mut adjacency_mat = create_adjacency_mat_floyd_warshall(&valves);
+    let mut flow_rates = create_flow_rates(&valves);
+    remove_zero_flow_nodes(&mut adjacency_mat, &mut flow_rates);
+    include_valve_opening(&mut adjacency_mat);
+
+    find_best_path_as_two(&adjacency_mat, &flow_rates)
 }
 
 fn create_valves(lines: &Vec<String>) -> HashMap<usize, Valve> {
@@ -187,6 +188,115 @@ fn _find_best_path_helper(
     curr_max
 }
 
+fn find_best_path_as_two(adj_mat: &Vec<Vec<u64>>, flow_rates: &Vec<u64>) -> u64 {
+    let all_paths = all_paths_in_less_than_x_minutes(adj_mat, 26);
+    let mut path_pairs = vec![];
+    for path1 in &all_paths {
+        for path2 in &all_paths {
+            path_pairs.push((path1, path2));
+        }
+    }
+
+    let mut pressure = 0;
+    for (path1, path2) in path_pairs {
+        pressure = std::cmp::max(pressure, compute_pressure_two_people(adj_mat, flow_rates, path1, path2));
+    }
+
+    pressure as u64
+}
+
+fn all_paths_in_less_than_x_minutes(adj_mat: &Vec<Vec<u64>>, x: i64) -> Vec<Vec<usize>> {
+    let mut visited = vec![false; adj_mat.len()];
+    visited[0] = true;
+    all_paths_in_less_than_x_minutes_helper(0, adj_mat, x, visited, vec![])
+}
+
+fn all_paths_in_less_than_x_minutes_helper(curr_valve: usize, adj_mat: &Vec<Vec<u64>>, x: i64, visited: Vec<bool>, curr_path: Vec<usize>) -> Vec<Vec<usize>> {
+    let mut paths = vec![];
+
+    for i in 0..adj_mat.len() {
+        if visited[i] {
+            continue;
+        }
+        let time = x - adj_mat[curr_valve][i] as i64; 
+        if time <= 0 {
+            continue;
+        }
+        let mut new_visited = visited.clone();
+        new_visited[i] = true;
+        let mut new_path = curr_path.clone();
+        new_path.push(i);
+        paths.append(&mut all_paths_in_less_than_x_minutes_helper(i, adj_mat, time, new_visited, new_path));
+    }
+
+    if paths.len() == 0 {
+        paths.push(curr_path);
+    }
+    paths
+}
+
+fn compute_pressure_two_people(adj_mat: &Vec<Vec<u64>>, flow_rates: &Vec<u64>, path1: &Vec<usize>, path2: &Vec<usize>) -> i64 {
+    let (mut i, mut j) = (0, 0);
+    let (mut curr_pos1, mut curr_pos2) = (0, 0);
+    let (mut time1, mut time2) = (26, 26);
+    let mut pressure = 0;
+    let mut visited = vec![false; adj_mat.len()];
+
+    while i < path1.len() || j < path2.len() {
+        if i >= path1.len() {
+            let next_pos = path2[j];
+            time2 -= adj_mat[curr_pos2][next_pos] as i64;
+
+            if !visited[next_pos] {
+                pressure += time2 * flow_rates[next_pos] as i64;
+            }
+            visited[next_pos] = true;
+            curr_pos2 = next_pos;
+            j += 1;
+            continue;
+        }
+        if j >= path2.len() {
+            let next_pos = path1[i];
+            time1 -= adj_mat[curr_pos1][next_pos] as i64;
+
+            if !visited[next_pos] {
+                pressure += time1 * flow_rates[next_pos] as i64;
+            }
+            visited[next_pos] = true;
+            curr_pos1 = next_pos;
+            i += 1;
+            continue;
+        }
+    
+        let next_pos1 = path1[i];
+        let updated_time1 = time1 - adj_mat[curr_pos1][next_pos1] as i64;
+        let next_pos2 = path2[j];
+        let updated_time2 = time2 - adj_mat[curr_pos2][next_pos2] as i64;
+
+        if updated_time1 > updated_time2 {
+            time1 = updated_time1;
+
+            if !visited[next_pos1] {
+                pressure += time1 * flow_rates[next_pos1] as i64;
+            }
+            visited[next_pos1] = true;
+            curr_pos1 = next_pos1;
+            i += 1;
+        } else {
+            time2 = updated_time2;
+
+            if !visited[next_pos2] {
+                pressure += time2 * flow_rates[next_pos2] as i64;
+            }
+            visited[next_pos2] = true;
+            curr_pos2 = next_pos2;
+            j += 1;
+        }
+    }
+
+    pressure
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -195,5 +305,11 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), 1651);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 1707);
     }
 }
