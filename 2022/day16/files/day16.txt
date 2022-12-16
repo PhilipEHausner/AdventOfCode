@@ -1,3 +1,4 @@
+Valve AA has flow rate=0; tunnels lead to valves VP, ON, PC, GE, YO
 Valve SY has flow rate=23; tunnel leads to valve CS
 Valve VG has flow rate=15; tunnels lead to valves XZ, FT, PF, TF, LG
 Valve LQ has flow rate=0; tunnels lead to valves YI, PW
@@ -10,7 +11,6 @@ Valve WE has flow rate=0; tunnels lead to valves YI, JS
 Valve YN has flow rate=0; tunnels lead to valves JS, PW
 Valve LG has flow rate=0; tunnels lead to valves BO, VG
 Valve GE has flow rate=0; tunnels lead to valves AA, HU
-Valve AA has flow rate=0; tunnels lead to valves VP, ON, PC, GE, YO
 Valve GC has flow rate=20; tunnels lead to valves DG, ZK, WC, KF, EX
 Valve QO has flow rate=12; tunnels lead to valves YA, TF, BV
 Valve JN has flow rate=0; tunnels lead to valves JS, ZX
