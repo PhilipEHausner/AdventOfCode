@@ -199,7 +199,10 @@ fn find_best_path_as_two(adj_mat: &Vec<Vec<u64>>, flow_rates: &Vec<u64>) -> u64 
 
     let mut pressure = 0;
     for (path1, path2) in path_pairs {
-        pressure = std::cmp::max(pressure, compute_pressure_two_people(adj_mat, flow_rates, path1, path2));
+        pressure = std::cmp::max(
+            pressure,
+            compute_pressure_two_people(adj_mat, flow_rates, path1, path2),
+        );
     }
 
     pressure as u64
@@ -211,14 +214,20 @@ fn all_paths_in_less_than_x_minutes(adj_mat: &Vec<Vec<u64>>, x: i64) -> Vec<Vec<
     all_paths_in_less_than_x_minutes_helper(0, adj_mat, x, visited, vec![])
 }
 
-fn all_paths_in_less_than_x_minutes_helper(curr_valve: usize, adj_mat: &Vec<Vec<u64>>, x: i64, visited: Vec<bool>, curr_path: Vec<usize>) -> Vec<Vec<usize>> {
+fn all_paths_in_less_than_x_minutes_helper(
+    curr_valve: usize,
+    adj_mat: &Vec<Vec<u64>>,
+    x: i64,
+    visited: Vec<bool>,
+    curr_path: Vec<usize>,
+) -> Vec<Vec<usize>> {
     let mut paths = vec![];
 
     for i in 0..adj_mat.len() {
         if visited[i] {
             continue;
         }
-        let time = x - adj_mat[curr_valve][i] as i64; 
+        let time = x - adj_mat[curr_valve][i] as i64;
         if time <= 0 {
             continue;
         }
@@ -226,7 +235,13 @@ fn all_paths_in_less_than_x_minutes_helper(curr_valve: usize, adj_mat: &Vec<Vec<
         new_visited[i] = true;
         let mut new_path = curr_path.clone();
         new_path.push(i);
-        paths.append(&mut all_paths_in_less_than_x_minutes_helper(i, adj_mat, time, new_visited, new_path));
+        paths.append(&mut all_paths_in_less_than_x_minutes_helper(
+            i,
+            adj_mat,
+            time,
+            new_visited,
+            new_path,
+        ));
     }
 
     if paths.len() == 0 {
@@ -235,7 +250,12 @@ fn all_paths_in_less_than_x_minutes_helper(curr_valve: usize, adj_mat: &Vec<Vec<
     paths
 }
 
-fn compute_pressure_two_people(adj_mat: &Vec<Vec<u64>>, flow_rates: &Vec<u64>, path1: &Vec<usize>, path2: &Vec<usize>) -> i64 {
+fn compute_pressure_two_people(
+    adj_mat: &Vec<Vec<u64>>,
+    flow_rates: &Vec<u64>,
+    path1: &Vec<usize>,
+    path2: &Vec<usize>,
+) -> i64 {
     let (mut i, mut j) = (0, 0);
     let (mut curr_pos1, mut curr_pos2) = (0, 0);
     let (mut time1, mut time2) = (26, 26);
@@ -267,7 +287,7 @@ fn compute_pressure_two_people(adj_mat: &Vec<Vec<u64>>, flow_rates: &Vec<u64>, p
             i += 1;
             continue;
         }
-    
+
         let next_pos1 = path1[i];
         let updated_time1 = time1 - adj_mat[curr_pos1][next_pos1] as i64;
         let next_pos2 = path2[j];
