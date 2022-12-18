@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use util::read_files::read_file_as_vector;
 
 #[derive(Debug)]
@@ -143,10 +141,10 @@ fn main() {
     println!("Solution part 2: {}", solve2(&lines));
 }
 
-fn solve1(lines: &Vec<String>) -> usize {
-    let jet_pattern: Vec<char> = lines[0].chars().collect();
-    solve_generic(jet_pattern, 7, 20000)
-}
+// fn solve1(lines: &Vec<String>) -> usize {
+//     let jet_pattern: Vec<char> = lines[0].chars().collect();
+//     solve_generic(jet_pattern, 7, 20000)
+// }
 
 fn solve2(lines: &Vec<String>) -> usize {
     let jet_pattern: Vec<char> = lines[0].chars().collect();
@@ -282,24 +280,24 @@ fn create_cave(width: usize, height: usize) -> Vec<Vec<char>> {
     cave
 }
 
-fn get_top_x_lines(cave: &Vec<Vec<char>>, x: usize) -> Vec<bool> {
-    let mut idx = 0;
+// fn get_top_x_lines(cave: &Vec<Vec<char>>, x: usize) -> Vec<bool> {
+//     let mut idx = 0;
 
-    for i in (0..cave.len()).rev() {
-        if cave[i].iter().any(|&el| el == '#') {
-            idx = i;
-            break;
-        }
-    }
+//     for i in (0..cave.len()).rev() {
+//         if cave[i].iter().any(|&el| el == '#') {
+//             idx = i;
+//             break;
+//         }
+//     }
 
-    let mut result = vec![];
+//     let mut result = vec![];
 
-    for i in (idx-x+1)..(idx+1) {
-        result.append(&mut cave[i].iter().map(|&el| el == '#').collect::<Vec<bool>>());
-    }
+//     for i in (idx-x+1)..(idx+1) {
+//         result.append(&mut cave[i].iter().map(|&el| el == '#').collect::<Vec<bool>>());
+//     }
 
-    result
-}
+//     result
+// }
 
 fn shrink_cave_representation(cave: &mut Vec<Vec<char>>) -> usize {
     // let mut cut_idx = 0;
@@ -354,17 +352,17 @@ fn shrink_cave_representation(cave: &mut Vec<Vec<char>>) -> usize {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_solve1() {
-        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
-        assert_eq!(solve1(&lines), 3068);
-    }
+    // #[test]
+    // fn test_solve1() {
+    //     let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+    //     assert_eq!(solve1(&lines), 3068);
+    // }
 
-    #[test]
-    fn test_solve1_large() {
-        let lines = read_file_as_vector("./files/day17.txt").expect("Error reading file.");
-        assert_eq!(solve1(&lines), 3106);
-    }
+    // #[test]
+    // fn test_solve1_large() {
+    //     let lines = read_file_as_vector("./files/day17.txt").expect("Error reading file.");
+    //     assert_eq!(solve1(&lines), 3106);
+    // }
 
     #[test]
     fn test_solve2() {
