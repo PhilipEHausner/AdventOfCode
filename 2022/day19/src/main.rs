@@ -184,7 +184,7 @@ impl RobotBuilt {
 fn main() {
     let lines = read_file_as_vector("./files/day19.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines));
-    // println!("Solution part 2: {}", solve2(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>) -> i64 {
@@ -200,9 +200,48 @@ fn solve1(lines: &Vec<String>) -> i64 {
         let mut resources = Resources::new(0, 0, 0, 0);
         let mut was_built = RobotBuilt::new(false, false, false, false);
         let time = 24;
-        let blueprint_res =
-            get_max_geodes(blueprint, &robots, &mut resources, &mut was_built, time);
+        let mut curr_max = 0;
+        let blueprint_res = get_max_geodes(
+            blueprint,
+            &robots,
+            &mut resources,
+            &mut was_built,
+            time,
+            &mut curr_max,
+        );
         result += blueprint_res * (i as i64 + 1);
+    }
+
+    result
+}
+
+fn solve2(lines: &Vec<String>) -> i64 {
+    let blueprints = lines
+        .iter()
+        .map(|el| parse_blueprint(el))
+        .collect::<Vec<Blueprint>>();
+
+    let mut result = 1;
+    for i in 0..std::cmp::min(3, blueprints.len()) {
+        println!(
+            "Blueprint {} / {}",
+            i + 1,
+            std::cmp::min(3, blueprints.len())
+        );
+        let robots = Robots::new(1, 0, 0, 0);
+        let mut resources = Resources::new(0, 0, 0, 0);
+        let mut was_built = RobotBuilt::new(false, false, false, false);
+        let time = 32;
+        let mut curr_max = 0;
+        let blueprint_res = get_max_geodes(
+            &blueprints[i],
+            &robots,
+            &mut resources,
+            &mut was_built,
+            time,
+            &mut curr_max,
+        );
+        result *= blueprint_res;
     }
 
     result
@@ -226,9 +265,15 @@ fn get_max_geodes(
     resources: &mut Resources,
     was_built: &mut RobotBuilt,
     time: u64,
+    curr_max: &mut i64,
 ) -> i64 {
     if time == 0 {
         return resources.geode;
+    }
+
+    let possible_max = robots.geode * time + (time * (time - 1)) / 2;
+    if (resources.geode + possible_max as i64) < *curr_max {
+        return 0;
     }
 
     if robots.clay == 0 {
@@ -239,7 +284,7 @@ fn get_max_geodes(
     }
 
     let mut result = resources.geode;
-    let can_build = get_buildable_robots(blueprint, resources, was_built);
+    let can_build = get_buildable_robots(blueprint, resources, was_built, time);
 
     resources.increase_by_robots(robots);
 
@@ -258,6 +303,7 @@ fn get_max_geodes(
                 &mut new_resources,
                 &mut new_was_built,
                 time - 1,
+                curr_max,
             ),
         );
     }
@@ -265,10 +311,11 @@ fn get_max_geodes(
     if !was_built.all_true() {
         result = std::cmp::max(
             result,
-            get_max_geodes(blueprint, robots, resources, was_built, time - 1),
+            get_max_geodes(blueprint, robots, resources, was_built, time - 1, curr_max),
         );
     }
 
+    *curr_max = std::cmp::max(*curr_max, result);
     result
 }
 
@@ -276,12 +323,14 @@ fn get_buildable_robots(
     blueprint: &Blueprint,
     resources: &Resources,
     was_built: &mut RobotBuilt,
+    time: u64,
 ) -> Vec<&'static RobotType> {
     RobotType::iter()
         .filter(|&rtype| {
             *rtype != RobotType::Skip
                 && rtype.can_be_built(blueprint, resources)
                 && !was_built.built(&rtype)
+                && time > 1
         })
         .collect()
 }
@@ -294,5 +343,17 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines), 33);
+    }
+
+    #[test]
+    fn test_solve1_large() {
+        let lines = read_file_as_vector("./files/day19.txt").expect("Error reading file.");
+        assert_eq!(solve1(&lines), 1719);
+    }
+
+    #[test]
+    fn test_solve2_large() {
+        let lines = read_file_as_vector("./files/day19.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 19530);
     }
 }
