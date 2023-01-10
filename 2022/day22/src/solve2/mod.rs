@@ -169,7 +169,12 @@ fn get_neighbours_for_field(
     } else {
         let edge = get_edge_for_face_and_direction(face, edges, Direction::North);
         let coords = get_over_boundary_coordinates(row, col, faces, &edge);
-        north = Tile::new(grid[coords.0][coords.1], coords.0, coords.1, edge.target_direction);
+        north = Tile::new(
+            grid[coords.0][coords.1],
+            coords.0,
+            coords.1,
+            edge.target_direction,
+        );
     }
 
     let south;
@@ -179,7 +184,12 @@ fn get_neighbours_for_field(
     } else {
         let edge = get_edge_for_face_and_direction(face, edges, Direction::South);
         let coords = get_over_boundary_coordinates(row, col, faces, &edge);
-        south = Tile::new(grid[coords.0][coords.1], coords.0, coords.1, edge.target_direction);
+        south = Tile::new(
+            grid[coords.0][coords.1],
+            coords.0,
+            coords.1,
+            edge.target_direction,
+        );
     }
 
     let east;
@@ -189,7 +199,12 @@ fn get_neighbours_for_field(
     } else {
         let edge = get_edge_for_face_and_direction(face, edges, Direction::East);
         let coords = get_over_boundary_coordinates(row, col, faces, &edge);
-        east = Tile::new(grid[coords.0][coords.1], coords.0, coords.1, edge.target_direction);
+        east = Tile::new(
+            grid[coords.0][coords.1],
+            coords.0,
+            coords.1,
+            edge.target_direction,
+        );
     }
 
     let west;
@@ -199,7 +214,12 @@ fn get_neighbours_for_field(
     } else {
         let edge = get_edge_for_face_and_direction(face, edges, Direction::West);
         let coords = get_over_boundary_coordinates(row, col, faces, &edge);
-        west = Tile::new(grid[coords.0][coords.1], coords.0, coords.1, edge.target_direction);
+        west = Tile::new(
+            grid[coords.0][coords.1],
+            coords.0,
+            coords.1,
+            edge.target_direction,
+        );
     }
 
     Neighbours::new(north, east, south, west)
@@ -242,38 +262,47 @@ fn get_over_boundary_coordinates(
             other_face.last_row() - col % square_size,
             other_face.last_col(),
         ),
-        (Direction::East, Direction::North) => {
-            (other_face.last_row(), other_face.first_col() + row % square_size)
-        },
+        (Direction::East, Direction::North) => (
+            other_face.last_row(),
+            other_face.first_col() + row % square_size,
+        ),
         (Direction::East, Direction::East) => (row, other_face.first_col()),
-        (Direction::East, Direction::South) => {
-            (other_face.first_row(), other_face.last_col() - row % square_size)
-        },
-        (Direction::East, Direction::West) => {
-            (other_face.last_row() - row % square_size, other_face.last_col())
-        },
-        (Direction::South, Direction::North) => {
-            (
-                other_face.last_row(),
-                other_face.last_col() - col % square_size,
-            )
-        },
-        (Direction::South, Direction::East) => {
-            (other_face.first_row(), other_face.last_col() - row % square_size)
-        },
-        (Direction::South, Direction::South) => (other_face.first_row(), other_face.first_col() + col % square_size),
-        (Direction::South, Direction::West) => {
-            (other_face.first_row() + col % square_size, other_face.last_col())
-        },
-        (Direction::West, Direction::North) => {
-            (other_face.last_row(), other_face.last_col() - row % square_size)
-        },
-        (Direction::West, Direction::East) => {
-            (other_face.last_row() - row % square_size, other_face.first_col())
-        },
-        (Direction::West, Direction::South) => {
-            (other_face.first_row(), other_face.first_col() + row % square_size)
-        },
+        (Direction::East, Direction::South) => (
+            other_face.first_row(),
+            other_face.last_col() - row % square_size,
+        ),
+        (Direction::East, Direction::West) => (
+            other_face.last_row() - row % square_size,
+            other_face.last_col(),
+        ),
+        (Direction::South, Direction::North) => (
+            other_face.last_row(),
+            other_face.last_col() - col % square_size,
+        ),
+        (Direction::South, Direction::East) => (
+            other_face.first_row(),
+            other_face.last_col() - row % square_size,
+        ),
+        (Direction::South, Direction::South) => (
+            other_face.first_row(),
+            other_face.first_col() + col % square_size,
+        ),
+        (Direction::South, Direction::West) => (
+            other_face.first_row() + col % square_size,
+            other_face.last_col(),
+        ),
+        (Direction::West, Direction::North) => (
+            other_face.last_row(),
+            other_face.last_col() - row % square_size,
+        ),
+        (Direction::West, Direction::East) => (
+            other_face.last_row() - row % square_size,
+            other_face.first_col(),
+        ),
+        (Direction::West, Direction::South) => (
+            other_face.first_row(),
+            other_face.first_col() + row % square_size,
+        ),
         (Direction::West, Direction::West) => (row, other_face.last_col()),
     }
 }

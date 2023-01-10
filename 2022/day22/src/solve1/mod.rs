@@ -11,7 +11,10 @@ pub struct Tile {
 impl Tile {
     pub fn new(tile_type: char, row: usize, col: usize, direction_force: Direction) -> Tile {
         if tile_type != '#' && tile_type != '.' {
-            panic!("Unexpected tile type '{}' at ({}, {}).", tile_type, row, col)
+            panic!(
+                "Unexpected tile type '{}' at ({}, {}).",
+                tile_type, row, col
+            )
         }
         Tile {
             tile_type,
@@ -20,7 +23,6 @@ impl Tile {
             direction_force,
         }
     }
-
 }
 
 #[derive(Debug, PartialEq)]
@@ -109,10 +111,10 @@ impl Position {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction {
-    North=3,
-    East=0,
-    South=1,
-    West=2,
+    North = 3,
+    East = 0,
+    South = 1,
+    West = 2,
 }
 
 impl Direction {
@@ -375,22 +377,22 @@ mod tests {
         let grid = create_grid(&lines);
 
         let neighbours1 = get_neighbours_for_field(&grid, 1, 1);
-        assert_eq!(neighbours1.north, Tile::new('#', 0, 1));
-        assert_eq!(neighbours1.east, Tile::new('#', 1, 2));
-        assert_eq!(neighbours1.south, Tile::new('#', 0, 1));
-        assert_eq!(neighbours1.west, Tile::new('.', 1, 0));
+        assert_eq!(neighbours1.north, Tile::new('#', 0, 1, Direction::North));
+        assert_eq!(neighbours1.east, Tile::new('#', 1, 2, Direction::East));
+        assert_eq!(neighbours1.south, Tile::new('#', 0, 1, Direction::South));
+        assert_eq!(neighbours1.west, Tile::new('.', 1, 0, Direction::West));
 
         let neighbours2 = get_neighbours_for_field(&grid, 1, 2);
-        assert_eq!(neighbours2.north, Tile::new('.', 2, 2));
-        assert_eq!(neighbours2.east, Tile::new('.', 1, 0));
-        assert_eq!(neighbours2.south, Tile::new('.', 2, 2));
-        assert_eq!(neighbours2.west, Tile::new('.', 1, 1));
+        assert_eq!(neighbours2.north, Tile::new('.', 2, 2, Direction::North));
+        assert_eq!(neighbours2.east, Tile::new('.', 1, 0, Direction::East));
+        assert_eq!(neighbours2.south, Tile::new('.', 2, 2, Direction::South));
+        assert_eq!(neighbours2.west, Tile::new('.', 1, 1, Direction::West));
 
         let neighbours3 = get_neighbours_for_field(&grid, 2, 2);
-        assert_eq!(neighbours3.north, Tile::new('#', 1, 2));
-        assert_eq!(neighbours3.east, Tile::new('.', 2, 3));
-        assert_eq!(neighbours3.south, Tile::new('#', 1, 2));
-        assert_eq!(neighbours3.west, Tile::new('.', 2, 3));
+        assert_eq!(neighbours3.north, Tile::new('#', 1, 2, Direction::North));
+        assert_eq!(neighbours3.east, Tile::new('.', 2, 3, Direction::East));
+        assert_eq!(neighbours3.south, Tile::new('#', 1, 2, Direction::South));
+        assert_eq!(neighbours3.west, Tile::new('.', 2, 3, Direction::West));
     }
 
     #[test]
