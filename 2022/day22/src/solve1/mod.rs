@@ -1,27 +1,30 @@
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-struct Tile {
+pub struct Tile {
     tile_type: char,
     row: usize,
     col: usize,
+    direction_force: Direction,
 }
 
 impl Tile {
-    fn new(tile_type: char, row: usize, col: usize) -> Tile {
+    pub fn new(tile_type: char, row: usize, col: usize, direction_force: Direction) -> Tile {
         if tile_type != '#' && tile_type != '.' {
-            panic!("Unexpected tile type '{}'.", tile_type)
+            panic!("Unexpected tile type '{}' at ({}, {}).", tile_type, row, col)
         }
         Tile {
             tile_type,
             row,
             col,
+            direction_force,
         }
     }
+
 }
 
 #[derive(Debug, PartialEq)]
-struct Neighbours {
+pub struct Neighbours {
     north: Tile,
     east: Tile,
     south: Tile,
@@ -29,7 +32,7 @@ struct Neighbours {
 }
 
 impl Neighbours {
-    fn new(north: Tile, east: Tile, south: Tile, west: Tile) -> Neighbours {
+    pub fn new(north: Tile, east: Tile, south: Tile, west: Tile) -> Neighbours {
         Neighbours {
             north,
             east,
@@ -38,7 +41,7 @@ impl Neighbours {
         }
     }
 
-    fn get_direction_tile(&self, direction: &Direction) -> &Tile {
+    pub fn get_direction_tile(&self, direction: &Direction) -> &Tile {
         match direction {
             Direction::North => &self.north,
             Direction::East => &self.east,
@@ -49,15 +52,15 @@ impl Neighbours {
 }
 
 #[derive(Debug, PartialEq)]
-struct Position {
-    row: usize,
-    col: usize,
-    facing: Direction,
+pub struct Position {
+    pub row: usize,
+    pub col: usize,
+    pub facing: Direction,
     neighbour_map: NeighbourMap,
 }
 
 impl Position {
-    fn new(row: usize, col: usize, facing: Direction, neighbour_map: NeighbourMap) -> Position {
+    pub fn new(row: usize, col: usize, facing: Direction, neighbour_map: NeighbourMap) -> Position {
         Position {
             row,
             col,
@@ -66,18 +69,18 @@ impl Position {
         }
     }
 
-    fn process_command(&mut self, command: &Command) {
+    pub fn process_command(&mut self, command: &Command) {
         match command {
             Command::Turn(turn_direction) => self.turn(turn_direction),
             Command::Move(num_steps) => self.step(*num_steps),
         }
     }
 
-    fn turn(&mut self, turn_direction: &TurnDirection) {
+    pub fn turn(&mut self, turn_direction: &TurnDirection) {
         self.facing = self.facing.change_direction(turn_direction);
     }
 
-    fn step(&mut self, num_steps: u64) {
+    pub fn step(&mut self, num_steps: u64) {
         for _ in 0..num_steps {
             let neighbour = self.neighbour_map.get(&(self.row, self.col)).unwrap();
             let tile = neighbour.get_direction_tile(&self.facing);
@@ -87,15 +90,16 @@ impl Position {
                 self.row = tile.row;
                 self.col = tile.col;
             }
+            self.facing = tile.direction_force;
         }
     }
 
-    fn calc_position_value(&self) -> u64 {
+    pub fn calc_position_value(&self) -> u64 {
         1000 * (self.row + 1) as u64 + 4 * (self.col + 1) as u64 + self.facing.value()
     }
 
     #[allow(dead_code)]
-    fn print(&self) {
+    pub fn print(&self) {
         println!(
             "Position {{ row: {}, col: {}, facing: {:?} }}",
             self.row, self.col, self.facing
@@ -103,16 +107,26 @@ impl Position {
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Direction {
+    North=3,
+    East=0,
+    South=1,
+    West=2,
 }
 
 impl Direction {
-    fn change_direction(&self, turn_direction: &TurnDirection) -> Direction {
+    pub fn from_usize(direction: usize) -> Direction {
+        match direction {
+            0 => Direction::East,
+            1 => Direction::South,
+            2 => Direction::West,
+            3 => Direction::North,
+            _ => panic!("Invalid usize {} for Direction::from_usize.", direction),
+        }
+    }
+
+    pub fn change_direction(&self, turn_direction: &TurnDirection) -> Direction {
         match (self, &turn_direction) {
             (Direction::North, TurnDirection::Left) => Direction::West,
             (Direction::North, TurnDirection::Right) => Direction::East,
@@ -125,7 +139,7 @@ impl Direction {
         }
     }
 
-    fn value(&self) -> u64 {
+    pub fn value(&self) -> u64 {
         match self {
             Direction::North => 3,
             Direction::East => 0,
@@ -136,18 +150,18 @@ impl Direction {
 }
 
 #[derive(Debug, PartialEq)]
-enum TurnDirection {
+pub enum TurnDirection {
     Left,
     Right,
 }
 
 #[derive(Debug, PartialEq)]
-enum Command {
+pub enum Command {
     Turn(TurnDirection),
     Move(u64),
 }
 
-type NeighbourMap = HashMap<(usize, usize), Neighbours>;
+pub type NeighbourMap = HashMap<(usize, usize), Neighbours>;
 
 pub fn solve(lines: &Vec<String>) -> u64 {
     let grid = create_grid(lines);
@@ -162,7 +176,7 @@ pub fn solve(lines: &Vec<String>) -> u64 {
     position.calc_position_value()
 }
 
-fn create_grid(lines: &Vec<String>) -> Vec<Vec<char>> {
+pub fn create_grid(lines: &Vec<String>) -> Vec<Vec<char>> {
     let (rows, cols) = get_number_cols_and_rows(lines);
     let mut grid = vec![vec!['x'; cols]; rows];
 
@@ -216,7 +230,7 @@ fn get_neighbours_for_field(grid: &Vec<Vec<char>>, row: usize, col: usize) -> Ne
     let mut n_index = if row == 0 { grid.len() - 1 } else { row - 1 };
     loop {
         if grid[n_index][col] != 'x' {
-            north = Tile::new(grid[n_index][col], n_index, col);
+            north = Tile::new(grid[n_index][col], n_index, col, Direction::North);
             break;
         }
         n_index = if n_index == 0 {
@@ -230,7 +244,7 @@ fn get_neighbours_for_field(grid: &Vec<Vec<char>>, row: usize, col: usize) -> Ne
     let mut s_index = if row == grid.len() - 1 { 0 } else { row + 1 };
     loop {
         if grid[s_index][col] != 'x' {
-            south = Tile::new(grid[s_index][col], s_index, col);
+            south = Tile::new(grid[s_index][col], s_index, col, Direction::South);
             break;
         }
         s_index = if s_index == grid.len() - 1 {
@@ -248,7 +262,7 @@ fn get_neighbours_for_field(grid: &Vec<Vec<char>>, row: usize, col: usize) -> Ne
     };
     loop {
         if grid[row][e_index] != 'x' {
-            east = Tile::new(grid[row][e_index], row, e_index);
+            east = Tile::new(grid[row][e_index], row, e_index, Direction::East);
             break;
         }
         e_index = if e_index == grid[row].len() - 1 {
@@ -266,7 +280,7 @@ fn get_neighbours_for_field(grid: &Vec<Vec<char>>, row: usize, col: usize) -> Ne
     };
     loop {
         if grid[row][w_index] != 'x' {
-            west = Tile::new(grid[row][w_index], row, w_index);
+            west = Tile::new(grid[row][w_index], row, w_index, Direction::West);
             break;
         }
         w_index = if w_index == 0 {
@@ -279,7 +293,7 @@ fn get_neighbours_for_field(grid: &Vec<Vec<char>>, row: usize, col: usize) -> Ne
     Neighbours::new(north, east, south, west)
 }
 
-fn get_commands(lines: &Vec<String>) -> Vec<Command> {
+pub fn get_commands(lines: &Vec<String>) -> Vec<Command> {
     let mut commands = vec![];
 
     let command_line = &lines[lines.len() - 1];
@@ -297,7 +311,7 @@ fn get_commands(lines: &Vec<String>) -> Vec<Command> {
     commands
 }
 
-fn get_start_position(grid: &Vec<Vec<char>>, neighbour_map: NeighbourMap) -> Position {
+pub fn get_start_position(grid: &Vec<Vec<char>>, neighbour_map: NeighbourMap) -> Position {
     let col = grid[0]
         .iter()
         .enumerate()
