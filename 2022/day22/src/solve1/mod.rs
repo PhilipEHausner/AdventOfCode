@@ -310,17 +310,18 @@ fn get_start_position(grid: &Vec<Vec<char>>, neighbour_map: NeighbourMap) -> Pos
 #[cfg(test)]
 mod tests {
     use super::*;
+    use util::read_files::read_file_as_vector;
 
     #[test]
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
-        assert_eq!(solve1(&lines), 6032);
+        assert_eq!(solve(&lines), 6032);
     }
 
     #[test]
     fn test_solve1_large() {
         let lines = read_file_as_vector("./files/day22.txt").expect("Error reading file.");
-        assert_eq!(solve1(&lines), 189140);
+        assert_eq!(solve(&lines), 189140);
     }
 
     #[test]
