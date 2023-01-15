@@ -20,20 +20,42 @@ type GamePlan = Vec<Vec<GamePlanTile>>;
 fn main() {
     let lines = read_file_as_vector("./files/day24.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines));
-    // println!("Solution part 2: {}", solve2(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>) -> u64 {
     let mut game_plan = create_game_plan(lines);
-    let mut possible_elve_positions = create_possible_elve_positions(lines, &game_plan);
+    let start_field = get_start_field(lines);
     let goal_field = get_goal_field(lines);
+
+    move_through_game_plan(&mut game_plan, start_field, goal_field)
+}
+
+fn solve2(lines: &Vec<String>) -> u64 {
+    let mut game_plan = create_game_plan(lines);
+    let start_field = get_start_field(lines);
+    let goal_field = get_goal_field(lines);
+
+    let mut rounds = move_through_game_plan(&mut game_plan, start_field, goal_field);
+    rounds += move_through_game_plan(&mut game_plan, goal_field, start_field);
+    rounds += move_through_game_plan(&mut game_plan, start_field, goal_field);
+
+    rounds
+}
+
+fn move_through_game_plan(
+    game_plan: &mut GamePlan,
+    start: (usize, usize),
+    goal: (usize, usize),
+) -> u64 {
+    let mut possible_elve_positions = create_possible_elve_positions(start, &game_plan);
 
     let mut rounds = 0;
     loop {
         rounds += 1;
-        process_round(&mut game_plan, &mut possible_elve_positions);
+        process_round(game_plan, &mut possible_elve_positions);
 
-        if goal_is_reached(&mut possible_elve_positions, goal_field) {
+        if goal_is_reached(&mut possible_elve_positions, goal) {
             break;
         }
     }
@@ -60,19 +82,28 @@ fn create_game_plan(lines: &Vec<String>) -> GamePlan {
     game_plan
 }
 
-fn create_possible_elve_positions(lines: &Vec<String>, game_plan: &GamePlan) -> Vec<Vec<bool>> {
+fn create_possible_elve_positions(
+    start_pos: (usize, usize),
+    game_plan: &GamePlan,
+) -> Vec<Vec<bool>> {
     let mut possible_elve_positions = vec![vec![false; game_plan[0].len()]; game_plan.len()];
+    possible_elve_positions[start_pos.0][start_pos.1] = true;
+    possible_elve_positions
+}
+
+fn get_start_field(lines: &Vec<String>) -> (usize, usize) {
+    let mut result = (0, 0);
 
     'outer: for (i, line) in lines.iter().enumerate() {
         for (j, tile) in line.chars().enumerate() {
             if tile == 'E' {
-                possible_elve_positions[i][j] = true;
+                result = (i, j);
                 break 'outer;
             }
         }
     }
 
-    possible_elve_positions
+    result
 }
 
 fn get_goal_field(lines: &Vec<String>) -> (usize, usize) {
@@ -263,9 +294,21 @@ mod tests {
         assert_eq!(solve1(&lines), 18);
     }
 
-    // #[test]
-    // fn test_solve2() {
-    //     let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
-    //     assert_eq!(solve2(&lines), 20);
-    // }
+    #[test]
+    fn test_solve1_large() {
+        let lines = read_file_as_vector("./files/day24.txt").expect("Error reading file.");
+        assert_eq!(solve1(&lines), 245);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 54);
+    }
+
+    #[test]
+    fn test_solve2_large() {
+        let lines = read_file_as_vector("./files/day24.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 798);
+    }
 }
