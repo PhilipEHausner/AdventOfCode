@@ -128,7 +128,7 @@ type ElveGrid = VecDeque<VecDeque<bool>>;
 fn main() {
     let lines = read_file_as_vector("./files/day23.txt").expect("Error reading file.");
     println!("Solution part 1: {}", solve1(&lines, 10));
-    // println!("Solution part 2: {}", solve2(&lines));
+    println!("Solution part 2: {}", solve2(&lines));
 }
 
 fn solve1(lines: &Vec<String>, rounds: usize) -> u64 {
@@ -140,6 +140,22 @@ fn solve1(lines: &Vec<String>, rounds: usize) -> u64 {
     }
 
     get_empty_ground_tiles(&elve_grid)
+}
+
+fn solve2(lines: &Vec<String>) -> u64 {
+    let mut elve_grid = create_elve_grid(lines);
+    let mut direction_proposer = create_direction_proposer();
+
+    let mut rounds = 0;
+    loop {
+        rounds += 1;
+        let no_moves = process_round(&mut elve_grid, &mut direction_proposer);
+        if no_moves {
+            break;
+        }
+    }
+
+    rounds
 }
 
 #[allow(dead_code)]
@@ -182,7 +198,7 @@ fn create_direction_proposer() -> DirectionProposer {
     ])
 }
 
-fn process_round(elve_grid: &mut ElveGrid, direction_proposer: &mut DirectionProposer) {
+fn process_round(elve_grid: &mut ElveGrid, direction_proposer: &mut DirectionProposer) -> bool {
     pad_grid(elve_grid);
     let mut move_to_hashmap: HashMap<(usize, usize), Vec<(usize, usize)>> = HashMap::new();
 
@@ -207,9 +223,13 @@ fn process_round(elve_grid: &mut ElveGrid, direction_proposer: &mut DirectionPro
         elve_grid.len()
     ]);
 
+    let mut no_moves = true;
     for (target, origins) in move_to_hashmap.iter() {
         if origins.len() == 1 {
             elve_grid[target.0][target.1] = true;
+            if target.0 != origins[0].0 || target.1 != origins[0].1 {
+                no_moves = false;
+            }
         } else {
             for origin in origins {
                 elve_grid[origin.0][origin.1] = true;
@@ -218,6 +238,7 @@ fn process_round(elve_grid: &mut ElveGrid, direction_proposer: &mut DirectionPro
     }
 
     direction_proposer.shift_directions();
+    no_moves
 }
 
 fn pad_grid(elve_grid: &mut ElveGrid) {
@@ -263,13 +284,19 @@ fn get_empty_ground_tiles(elve_grid: &ElveGrid) -> u64 {
     let mut max_col = 0;
 
     for row in elve_grid {
-        min_col = std::cmp::min(min_col, row.iter().position(|&el| el).unwrap_or(elve_grid[0].len()));
+        min_col = std::cmp::min(
+            min_col,
+            row.iter().position(|&el| el).unwrap_or(elve_grid[0].len()),
+        );
         max_col = std::cmp::max(max_col, row.iter().rposition(|&el| el).unwrap_or(0));
     }
 
-    let num_elves: usize = elve_grid.iter().map(|row| row.iter().filter(|&&el| el).count()).sum::<usize>();
+    let num_elves: usize = elve_grid
+        .iter()
+        .map(|row| row.iter().filter(|&&el| el).count())
+        .sum::<usize>();
 
-    ((max_row - min_row + 1) * (max_col - min_col + 1) -num_elves) as u64
+    ((max_row - min_row + 1) * (max_col - min_col + 1) - num_elves) as u64
 }
 
 #[cfg(test)]
@@ -280,5 +307,11 @@ mod tests {
     fn test_solve1() {
         let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
         assert_eq!(solve1(&lines, 10), 110);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let lines = read_file_as_vector("./files/test.txt").expect("Error reading file.");
+        assert_eq!(solve2(&lines), 20);
     }
 }
