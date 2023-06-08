@@ -38,9 +38,13 @@ fun computeProgramAlarm(nums: List<Int>): Int {
 }
 
 fun compute1202ProgramAlarm(nums: List<Int>): Int {
+    return computeNounVerbProgramAlarm(nums, 12, 2)
+}
+
+fun computeNounVerbProgramAlarm(nums: List<Int>, noun: Int, verb: Int): Int {
     val numbers = nums.toMutableList()
-    numbers[1] = 12
-    numbers[2] = 2
+    numbers[1] = noun
+    numbers[2] = verb
     return computeProgramAlarm(numbers)
 }
 
@@ -49,7 +53,23 @@ fun part1(numbers: List<Int>) {
     println("Solution part 1: $programAlarm")
 }
 
+fun part2(numbers: List<Int>) {
+    var found = false
+    for (noun in 0..99) {
+        for (verb in 0..99) {
+            val alarm = computeNounVerbProgramAlarm(numbers, noun, verb)
+            if (alarm == 19690720) {
+                println("Solution part 2: 100 * $noun + $verb = ${100 * noun + verb}")
+                found = true
+                break
+            }
+        }
+        if (found) break
+    }
+}
+
 fun main() {
     val numbers = readFile("files/day2.txt")
     part1(numbers)
+    part2(numbers)
 }
