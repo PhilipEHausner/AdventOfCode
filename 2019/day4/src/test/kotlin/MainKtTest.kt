@@ -12,6 +12,9 @@ internal class MainKtTest {
         assertEquals(true, isValidPassword(111111))
         assertEquals(false, isValidPassword(223450))
         assertEquals(false, isValidPassword(123789))
+        assertEquals(true, isValidPassword(112233, true))
+        assertEquals(false, isValidPassword(123444, true))
+        assertEquals(true, isValidPassword(111122, true))
     }
 
 }
