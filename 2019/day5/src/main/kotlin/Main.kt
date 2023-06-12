@@ -8,6 +8,10 @@ enum class OpCode(val code: Int) {
     MULTIPLY(2),
     INPUT(3),
     OUTPUT(4),
+    JUMP_IF_TRUE(5),
+    JUMP_IF_FALSE(6),
+    LESS_THAN(7),
+    EQUALS(8),
     STOP(99);
 
     companion object {
@@ -40,29 +44,36 @@ data class Instruction(val opCode: OpCode, val parameters: List<Parameter>) {
             OpCode.MULTIPLY -> assert(this.parameters.size == 3)
             OpCode.INPUT -> assert(this.parameters.size == 1)
             OpCode.OUTPUT -> assert(this.parameters.size == 1)
+            OpCode.JUMP_IF_TRUE -> assert(this.parameters.size == 2)
+            OpCode.JUMP_IF_FALSE -> assert(this.parameters.size == 2)
+            OpCode.LESS_THAN -> assert(this.parameters.size == 3)
+            OpCode.EQUALS -> assert(this.parameters.size == 3)
             OpCode.STOP -> assert(this.parameters.isEmpty())
-            else -> throw NotImplementedError("Instruction not implemented for OpCode ${this.opCode}.")
         }
     }
 
     fun apply(code: MutableList<Int>): Int? {
+        var result: Int? = null
         when (this.opCode) {
             OpCode.ADD -> this.add(code)
             OpCode.MULTIPLY -> this.multiply(code)
             OpCode.INPUT -> this.input(code)
-            OpCode.OUTPUT -> return this.output(code)
+            OpCode.OUTPUT -> result = this.output(code)
+            OpCode.JUMP_IF_TRUE -> result = this.jumpIfTrue(code)
+            OpCode.JUMP_IF_FALSE -> result = this.jumpIfFalse(code)
+            OpCode.LESS_THAN -> this.lessThan(code)
+            OpCode.EQUALS -> this.equality(code)
             OpCode.STOP -> {}
-            else -> throw NotImplementedError("Instruction.apply not implemented for OpCode ${this.opCode}.")
         }
-        return null
+        return result
     }
 
     private fun add(code: MutableList<Int>) {
-        code[this.parameters[2].value] = this.parameters[0].getValue(code) + this.parameters[1].getValue(code)
+        code[this.parameters[2].getValue(code)] = this.parameters[0].getValue(code) + this.parameters[1].getValue(code)
     }
 
     private fun multiply(code: MutableList<Int>) {
-        code[this.parameters[2].value] = this.parameters[0].getValue(code) * this.parameters[1].getValue(code)
+        code[this.parameters[2].getValue(code)] = this.parameters[0].getValue(code) * this.parameters[1].getValue(code)
     }
 
     private fun input(code: MutableList<Int>) {
@@ -76,6 +87,36 @@ data class Instruction(val opCode: OpCode, val parameters: List<Parameter>) {
         println("Intermediate Output Value: ${out}.")
         return out
     }
+
+    private fun jumpIfTrue(code: List<Int>): Int? {
+        return when (this.parameters[0].getValue(code)) {
+            0 -> null
+            else -> this.parameters[1].getValue(code)
+        }
+    }
+
+    private fun jumpIfFalse(code: List<Int>): Int? {
+        return when (this.parameters[0].getValue(code)) {
+            0 -> this.parameters[1].getValue(code)
+            else -> null
+        }
+    }
+
+    private fun lessThan(code: MutableList<Int>) {
+        code[this.parameters[2].getValue(code)] =
+            when (this.parameters[0].getValue(code) < this.parameters[1].getValue(code)) {
+                true -> 1
+                false -> 0
+            }
+    }
+
+    private fun equality(code: MutableList<Int>) {
+        code[this.parameters[2].getValue(code)] =
+            when (this.parameters[0].getValue(code) == this.parameters[1].getValue(code)) {
+                true -> 1
+                false -> 0
+            }
+    }
 }
 
 class ParameterParser() {
@@ -84,8 +125,9 @@ class ParameterParser() {
             OpCode.ADD, OpCode.MULTIPLY -> this.parseAddOrMultiplyParameters(code, instructionPointer)
             OpCode.INPUT -> this.parseInputParameter(code, instructionPointer)
             OpCode.OUTPUT -> this.parseOutputParameter(code, instructionPointer)
+            OpCode.JUMP_IF_TRUE, OpCode.JUMP_IF_FALSE -> this.parseJumpIfParameter(code, instructionPointer)
+            OpCode.LESS_THAN, OpCode.EQUALS -> this.parseComparisonParameter(code, instructionPointer)
             OpCode.STOP -> listOf()
-            else -> throw NotImplementedError("Parameter parser does not implement OpCode ${opCode}.")
         }
     }
 
@@ -96,7 +138,7 @@ class ParameterParser() {
         return listOf(
             Parameter(ParameterMode.fromChar(opCodeString[2]), code[instructionPointer + 1]),
             Parameter(ParameterMode.fromChar(opCodeString[1]), code[instructionPointer + 2]),
-            Parameter(ParameterMode.fromChar(opCodeString[0]), code[instructionPointer + 3]),
+            Parameter(ParameterMode.ImmediateMode, code[instructionPointer + 3]),
         )
     }
 
@@ -114,6 +156,26 @@ class ParameterParser() {
             Parameter(ParameterMode.fromChar(opCodeString[0]), code[instructionPointer + 1])
         )
     }
+
+    private fun parseJumpIfParameter(code: List<Int>, instructionPointer: Int): List<Parameter> {
+        var opCodeString = code[instructionPointer].toString()
+        opCodeString = opCodeString.padStart(4, '0')
+        return listOf(
+            Parameter(ParameterMode.fromChar(opCodeString[1]), code[instructionPointer + 1]),
+            Parameter(ParameterMode.fromChar(opCodeString[0]), code[instructionPointer + 2]),
+        )
+    }
+
+    private fun parseComparisonParameter(code: List<Int>, instructionPointer: Int): List<Parameter> {
+        var opCodeString = code[instructionPointer].toString()
+        opCodeString = opCodeString.padStart(5, '0')
+        assert(opCodeString[0] == '0')
+        return listOf(
+            Parameter(ParameterMode.fromChar(opCodeString[2]), code[instructionPointer + 1]),
+            Parameter(ParameterMode.fromChar(opCodeString[1]), code[instructionPointer + 2]),
+            Parameter(ParameterMode.ImmediateMode, code[instructionPointer + 3]),
+        )
+    }
 }
 
 class ShipComputer(inputCode: List<Int>) {
@@ -127,7 +189,12 @@ class ShipComputer(inputCode: List<Int>) {
             val instruction = parseInstructionCode()
             val out = instruction.apply(this.code)
             when (instruction.opCode) {
-                OpCode.OUTPUT -> output = out ?: throw Error("Output instruction should return a valid Integer value.")
+                OpCode.OUTPUT -> output =
+                    out ?: throw Error("Output instruction should return a valid Integer value for operation 'OUTPUT'.")
+
+                OpCode.JUMP_IF_FALSE, OpCode.JUMP_IF_TRUE -> this.instructionPointer =
+                    out ?: (this.instructionPointer + 3)
+
                 OpCode.STOP -> break
                 else -> {}
             }
@@ -154,8 +221,11 @@ class ShipComputer(inputCode: List<Int>) {
             OpCode.MULTIPLY -> 4
             OpCode.INPUT -> 2
             OpCode.OUTPUT -> 2
+            OpCode.JUMP_IF_TRUE -> 0
+            OpCode.JUMP_IF_FALSE -> 0
+            OpCode.LESS_THAN -> 4
+            OpCode.EQUALS -> 4
             OpCode.STOP -> 0
-            else -> throw NotImplementedError("increaseInstructionPointer is not implemented for OpCode ${opCode}.")
         }
     }
 }
