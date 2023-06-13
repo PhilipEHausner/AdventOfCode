@@ -81,11 +81,11 @@ data class Instruction(
 
     private fun input(code: MutableList<Int>) {
         val userInput = if (this.defaultInputs != null) {
-            val value = this.defaultInputs[0]
-            if (this.defaultInputs.size > 1) {
-                this.defaultInputs.removeFirst()
-            }
-            value
+//            if (this.defaultInputs.size > 1) {
+            this.defaultInputs.removeFirst()
+//            } else {
+//                this.defaultInputs[0]
+//            }
         } else {
             print("Provide integer parameter input: ")
             readln().toInt()
@@ -192,17 +192,13 @@ class ShipComputer(inputCode: List<Int>, inputs: List<Int>? = null) {
     private val code = inputCode.toMutableList()
     private var instructionPointer = 0
     private val parameterParser = ParameterParser()
-    private val inputs = inputs?.toMutableList()
+    private var inputs = inputs?.toMutableList()
 
     fun parse(): Int {
-        var output = 0
         while (true) {
             val instruction = parseInstructionCode()
             val out = instruction.apply(this.code)
             when (instruction.opCode) {
-                OpCode.OUTPUT -> output =
-                    out ?: throw Error("Output instruction should return a valid Integer value for operation 'OUTPUT'.")
-
                 OpCode.JUMP_IF_FALSE, OpCode.JUMP_IF_TRUE -> this.instructionPointer =
                     out ?: (this.instructionPointer + 3)
 
@@ -210,8 +206,13 @@ class ShipComputer(inputCode: List<Int>, inputs: List<Int>? = null) {
                 else -> {}
             }
             this.increaseInstructionPointer(instruction.opCode)
+
+            if (instruction.opCode == OpCode.OUTPUT) {
+                return out
+                    ?: throw Error("Output instruction should return a valid Integer value for operation 'OUTPUT'.")
+            }
         }
-        return output
+        return 0
     }
 
     private fun parseInstructionCode(): Instruction {
@@ -239,12 +240,27 @@ class ShipComputer(inputCode: List<Int>, inputs: List<Int>? = null) {
             OpCode.STOP -> 0
         }
     }
+
+    fun addInput(input: Int) {
+        this.inputs!!.add(input)
+    }
 }
 
-class Amplifier(private val code: List<Int>, private val phaseSetting: Int, private val input: Int) {
+class Amplifier(code: List<Int>, phaseSetting: Int, input: Int? = null) {
+    private val computer = ShipComputer(code, listOf(phaseSetting))
+
+    init {
+        if (input != null) {
+            this.computer.addInput(input)
+        }
+    }
+
     fun process(): Int {
-        val computer = ShipComputer(this.code, listOf(this.phaseSetting, this.input))
         return computer.parse()
+    }
+
+    fun addInput(input: Int) {
+        this.computer.addInput(input)
     }
 }
 
@@ -256,6 +272,32 @@ class AmplifierChain(private val code: List<Int>, private val input: Int, privat
             currInput = amplifier.process()
         }
         return currInput
+    }
+}
+
+class AmplifierChainWithFeedbackLoop(
+    private val code: List<Int>,
+    private val input: Int,
+    private val phaseSettings: List<Int>,
+    private val rounds: Int
+) {
+    fun getOutputSignal(): Int {
+        val amplifiers = mutableListOf<Amplifier>()
+        for (setting in this.phaseSettings) {
+            amplifiers.add(Amplifier(this.code, setting))
+        }
+
+        var currInput = this.input
+        var maxOutput = Int.MIN_VALUE
+        for (i in 1..this.rounds) {
+            for (amplifier in amplifiers) {
+                amplifier.addInput(currInput)
+                currInput = amplifier.process()
+                maxOutput = max(maxOutput, currInput)
+            }
+        }
+
+        return maxOutput
     }
 }
 
@@ -271,8 +313,8 @@ fun <T> getPermutations(list: List<T>): List<List<T>> {
 
         val result: MutableSet<List<T>> = mutableSetOf()
         for (i in list.indices) {
-            allPermutations(list - list[i]).forEach{
-                    item -> result.add(item + list[i])
+            allPermutations(list - list[i]).forEach { item ->
+                result.add(item + list[i])
             }
         }
         return result
@@ -281,12 +323,8 @@ fun <T> getPermutations(list: List<T>): List<List<T>> {
     return allPermutations(list).toList()
 }
 
-fun getAllPhaseCombinations(): List<List<Int>> {
-    return getPermutations(listOf(0,1,2,3,4))
-}
-
-fun part1(code: List<Int>) {
-    val phaseSettings = getAllPhaseCombinations()
+fun part1(code: List<Int>): Int {
+    val phaseSettings = getPermutations(listOf(0, 1, 2, 3, 4))
     var maxSignal = Int.MIN_VALUE
     for (phaseSetting in phaseSettings) {
         val chain = AmplifierChain(code, 0, phaseSetting)
@@ -294,9 +332,23 @@ fun part1(code: List<Int>) {
         maxSignal = max(maxSignal, signal)
     }
     println("Result of part 1: ${maxSignal}.")
+    return maxSignal
+}
+
+fun part2(code: List<Int>): Int {
+    val phaseSettings = getPermutations(listOf(5, 6, 7, 8, 9))
+    var maxSignal = Int.MIN_VALUE
+    for (phaseSetting in phaseSettings) {
+        val chain = AmplifierChainWithFeedbackLoop(code, 0, phaseSetting, 100)
+        val signal = chain.getOutputSignal()
+        maxSignal = max(maxSignal, signal)
+    }
+    println("Result of part 2: ${maxSignal}.")
+    return maxSignal
 }
 
 fun main() {
     val code = readFile("files/day7.txt")
     part1(code)
+    part2(code)
 }
