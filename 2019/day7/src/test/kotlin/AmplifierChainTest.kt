@@ -38,8 +38,8 @@ internal class AmplifierChainTest {
         )
         for (test in tests) {
             val (code, input, phaseSettings, expectedOutput) = test
-            val chain = AmplifierChain(code, input, phaseSettings)
-            assertEquals(expectedOutput, chain.getOutputSignal())
+            val chain = AmplifierChain(code, phaseSettings)
+            assertEquals(expectedOutput, chain.getOutputSignal(input))
         }
     }
 

@@ -32,8 +32,8 @@ class AmplifierChainWithFeedbackLoopTest {
         )
         for (test in tests) {
             val (code, input, phaseSettings, expectedOutput) = test
-            val chain = AmplifierChainWithFeedbackLoop(code, input, phaseSettings, 100)
-            assertEquals(expectedOutput, chain.getOutputSignal())
+            val chain = AmplifierChainWithFeedbackLoop(code, phaseSettings, 100)
+            assertEquals(expectedOutput, chain.getOutputSignal(input))
         }
     }
 
