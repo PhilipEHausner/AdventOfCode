@@ -17,5 +17,9 @@ internal class ImageTest {
 
     @Test
     fun testPart1() {
+        val encoding = readFile("./files/day8.txt")
+        val imageSize = Pair(25, 6)
+        val image = Image(encoding, imageSize)
+        assertEquals(1950, image.checkSum())
     }
 }

@@ -12,7 +12,7 @@ fun part1(encoding: List<Int>, imageSize: Pair<Int, Int>) {
     println("Solution part 1: ${image.checkSum()}.")
 }
 
-fun main(args: Array<String>) {
+fun main() {
     val encoding = readFile("./files/day8.txt")
     val imageSize = Pair(25, 6)
     part1(encoding, imageSize)
