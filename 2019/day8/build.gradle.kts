@@ -5,12 +5,15 @@ plugins {
 
 group = "org.example"
 version = "1.0-SNAPSHOT"
+val korimVersion = "4.0.2"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    // For JVM only
+    implementation("com.soywiz.korlibs.korim:korim-jvm:$korimVersion")
     testImplementation(kotlin("test"))
 }
 

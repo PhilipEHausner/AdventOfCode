@@ -1,4 +1,4 @@
-import kotlin.math.max
+import aoc.Image
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,7 +9,7 @@ internal class ImageTest {
 
     @Test
     fun testChecksum() {
-        val encoding = stringToIntList("122116789012")
+        val encoding = stringToIntList("122110001012")
         val imageSize = Pair(3, 2)
         val image = Image(encoding, imageSize)
         assertEquals(6, image.checkSum())
