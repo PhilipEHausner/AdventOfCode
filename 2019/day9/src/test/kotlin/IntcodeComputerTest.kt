@@ -43,4 +43,13 @@ class IntcodeComputerTest {
         val result = shipComputer.process()
         assertEquals(3507134798, result)
     }
+
+    @Test
+    fun testPart2() {
+        val intcode = readFile("./files/day9.txt")
+        val shipComputer = IntcodeComputer(intcode)
+        shipComputer.pushInput(2)
+        val result = shipComputer.process()
+        assertEquals(84513, result)
+    }
 }

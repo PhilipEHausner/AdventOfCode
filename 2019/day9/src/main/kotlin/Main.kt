@@ -4,11 +4,19 @@ import java.nio.charset.Charset
 fun main() {
     val intcode = readFile("./files/day9.txt")
     part1(intcode)
+    part2(intcode)
 }
 
 fun part1(intcode: List<Long>) {
     val shipComputer = IntcodeComputer(intcode)
     shipComputer.pushInput(1)
+    val result = shipComputer.process()
+    println("Result of part 1: $result.")
+}
+
+fun part2(intcode: List<Long>) {
+    val shipComputer = IntcodeComputer(intcode)
+    shipComputer.pushInput(2)
     val result = shipComputer.process()
     println("Result of part 1: $result.")
 }
