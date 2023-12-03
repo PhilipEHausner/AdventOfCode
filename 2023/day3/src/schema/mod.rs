@@ -18,6 +18,22 @@ impl Field {
             Field::Empty => false,
         }
     }
+
+    fn is_number(&self) -> bool {
+        match self {
+            Field::Number(_) => true,
+            Field::Symbol(_) => false,
+            Field::Empty => false,
+        }
+    }
+
+    pub fn is_gear(&self) -> bool {
+        match self {
+            Field::Number(_) => false,
+            Field::Symbol(s) => return s == &'*',
+            Field::Empty => false,
+        }
+    }
 }
 
 impl fmt::Display for Field {
@@ -133,5 +149,67 @@ impl Schema {
             }
         }
         false
+    }
+
+    pub fn numbers_around_field(&self, x: usize, y: usize) -> Vec<i64> {
+        let mut result = vec![];
+
+        // top row
+        if x > 0 {
+            if self.get_field(x - 1, y).is_number() {
+                result.push(self.parse_number_from_index(x - 1, y));
+            } else {
+                if y > 0 && self.get_field(x - 1, y - 1).is_number() {
+                    result.push(self.parse_number_from_index(x - 1, y - 1));
+                }
+                if y < self.dims.y - 1 && self.get_field(x - 1, y + 1).is_number() {
+                    result.push(self.parse_number_from_index(x - 1, y + 1));
+                }
+            }
+        }
+
+        // mid row
+        if self.get_field(x, y).is_number() {
+            result.push(self.parse_number_from_index(x, y));
+        } else {
+            if y > 0 && self.get_field(x, y - 1).is_number() {
+                result.push(self.parse_number_from_index(x, y - 1));
+            }
+            if y < self.dims.y - 1 && self.get_field(x, y + 1).is_number() {
+                result.push(self.parse_number_from_index(x, y + 1));
+            }
+        }
+
+        // bottom row
+        if x < self.dims.x - 1 {
+            if self.get_field(x + 1, y).is_number() {
+                result.push(self.parse_number_from_index(x + 1, y));
+            } else {
+                if y > 0 && self.get_field(x + 1, y - 1).is_number() {
+                    result.push(self.parse_number_from_index(x + 1, y - 1));
+                }
+                if y < self.dims.y - 1 && self.get_field(x + 1, y + 1).is_number() {
+                    result.push(self.parse_number_from_index(x + 1, y + 1));
+                }
+            }
+        }
+
+        result
+    }
+
+    fn parse_number_from_index(&self, x: usize, mut y: usize) -> i64 {
+        while y > 0 && self.get_field(x, y - 1).is_number() {
+            y -= 1;
+        }
+        let mut result = 0;
+        while y < self.dims.y {
+            match self.get_field(x, y) {
+                Field::Number(num) => result = result * 10 + num,
+                Field::Symbol(_) => break,
+                Field::Empty => break,
+            }
+            y += 1;
+        }
+        result
     }
 }

@@ -6,6 +6,7 @@ mod schema;
 fn main() {
     let schema = Schema::new("./files/day3.txt");
     println!("Solution part 1: {}", solve1(&schema));
+    println!("Solution part 2: {}", solve2(&schema));
 }
 
 fn solve1(schema: &Schema) -> i64 {
@@ -45,6 +46,23 @@ fn solve1(schema: &Schema) -> i64 {
     result
 }
 
+fn solve2(schema: &Schema) -> i64 {
+    let mut result = 0;
+    for x in 0..schema.dims().x {
+        for y in 0..schema.dims().y {
+            if schema.get_field(x, y).is_gear() {
+                let numbers = schema.numbers_around_field(x, y);
+                match numbers.len() {
+                    ..=1 => continue,
+                    2 => result += numbers.get(0).unwrap() * numbers.get(1).unwrap(),
+                    _ => panic!("More than 2 numbers around gear. I did not expect that."),
+                }
+            }
+        }
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -61,5 +79,19 @@ mod tests {
         let input = Schema::new("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 4361);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = Schema::new("./files/day3.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 83279367);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = Schema::new("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 467835);
     }
 }
