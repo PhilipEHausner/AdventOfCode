@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use util::read_files::read_file_as_vector;
 
+#[derive(Debug, PartialEq)]
 struct ScratchCard {
     winning_numbers: HashSet<i64>,
     numbers: HashSet<i64>,
@@ -35,12 +36,16 @@ impl ScratchCard {
             .collect::<HashSet<i64>>()
     }
 
+    pub fn matches(&self) -> usize {
+        self
+        .numbers
+        .iter()
+        .filter(|it| self.winning_numbers.contains(it))
+        .count()
+    }
+
     pub fn points(&self) -> i64 {
-        let matches = self
-            .numbers
-            .iter()
-            .filter(|it| self.winning_numbers.contains(it))
-            .count();
+        let matches = self.matches();
         if matches == 0 {
             0
         } else {
@@ -52,7 +57,7 @@ impl ScratchCard {
 fn main() {
     let scratch_cards = parse_scratchcards("./files/day4.txt");
     println!("Solution part 1: {}", solve1(&scratch_cards));
-    // println!("Solution part 2: {}", solve2(&scratch_cards));
+    println!("Solution part 2: {}", solve2(&scratch_cards));
 }
 
 fn parse_scratchcards(file: &str) -> Vec<ScratchCard> {
@@ -67,6 +72,18 @@ fn solve1(scratch_cards: &Vec<ScratchCard>) -> i64 {
     scratch_cards.into_iter().map(|it| it.points()).sum()
 }
 
+fn solve2(scratch_cards: &Vec<ScratchCard>) -> usize {
+    let mut num_cards: Vec<usize> = scratch_cards.iter().map(|_| 1).collect();
+    for i in 0..scratch_cards.len() {
+        let matches = scratch_cards.get(i).unwrap().matches();
+        let increase = num_cards[i];
+        for j in (i+1)..(i+1+matches).min(scratch_cards.len()) {
+            num_cards[j] += increase;
+        }
+    }
+    num_cards.iter().sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,11 +94,25 @@ mod tests {
         let result = solve1(&input);
         assert_eq!(result, 27059);
     }
-
+    
     #[test]
     fn test_solve1_testdata() {
         let input = parse_scratchcards("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 13);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = parse_scratchcards("./files/day4.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 5744979);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = parse_scratchcards("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 30);
     }
 }
