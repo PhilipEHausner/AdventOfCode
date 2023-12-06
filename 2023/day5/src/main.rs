@@ -41,7 +41,7 @@ fn get_target_id(source: u64, map: &CategoryMap) -> u64 {
 }
 
 fn solve2(input_almanach: &Almanach) -> u64 {
-    let almanach = parse_part2_almanach(input_almanach);
+    let almanach: Part2Almanach = parse_part2_almanach(input_almanach);
     almanach
         .seeds
         .iter()
@@ -52,6 +52,7 @@ fn solve2(input_almanach: &Almanach) -> u64 {
 
 fn get_seed_location_part2(seed: &Seed, maps: &Vec<CategoryMap>) -> u64 {
     let mut seeds: Vec<Seed> = vec![seed.clone()];
+
     for map in maps {
         let mut new_seeds: Vec<Seed> = vec![];
         for s in &seeds {
@@ -59,14 +60,12 @@ fn get_seed_location_part2(seed: &Seed, maps: &Vec<CategoryMap>) -> u64 {
         }
         seeds = new_seeds;
     }
-    
+
     // Sort and throw away 0 values to circumvent strange bug that I cannot be bothered to fix atm.
     seeds.iter().map(|it| {it.start}).filter(|it| {it > &0}).min().unwrap()
 }
 
 fn get_target_seeds_part2(seed: &Seed, map: &CategoryMap) -> Vec<Seed> {
-    if seed.start == 46 {
-    }
     let entries = map.entries.iter().filter(|it| {
         !(it.source_range_start + it.range_length - 1 < seed.start) && !(it.source_range_start > seed.end)
     });
