@@ -3,7 +3,8 @@ use util::read_files::read_file_as_vector;
 fn main() {
     let races = parse_races("./files/day6.txt");
     println!("Solution part 1: {}", solve1(&races));
-    println!("Solution part 2: {}", solve2(&races));
+    let race_part2 = parse_races_part2("./files/day6.txt");
+    println!("Solution part 2: {}", solve2(&vec![race_part2]));
 }
 
 fn solve1(races: &Vec<Race>) -> i64 {
@@ -32,7 +33,7 @@ fn upper_bound(race: &Race) -> i64 {
 }
 
 fn solve2(races: &Vec<Race>) -> i64 {
-    1
+    solve1(races)
 }
 
 fn parse_races(file: &str) -> Vec<Race> {
@@ -56,6 +57,26 @@ fn parse_races(file: &str) -> Vec<Race> {
         .collect()
 }
 
+fn parse_races_part2(file: &str) -> Race {
+    let lines = read_file_as_vector(file).expect("Could not read file.");
+    assert!(lines.len() >= 2);
+    let time = lines[0]
+        .split_whitespace()
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join("")
+        .parse()
+        .unwrap();
+    let dist = lines[1]
+        .split_whitespace()
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join("")
+        .parse()
+        .unwrap();
+    Race::new(time, dist)
+}
+
 struct Race {
     time: i64,
     distance: i64,
@@ -77,11 +98,25 @@ mod tests {
         let result = solve1(&input);
         assert_eq!(result, 1195150);
     }
-    
+
     #[test]
     fn test_solve1_testdata() {
         let input = parse_races("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 288);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = parse_races_part2("./files/day6.txt");
+        let result = solve2(&vec![input]);
+        assert_eq!(result, 42550411);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = parse_races_part2("./files/test.txt");
+        let result = solve2(&vec![input]);
+        assert_eq!(result, 71503);
     }
 }
