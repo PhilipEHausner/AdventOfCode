@@ -80,9 +80,9 @@ mod solve1 {
 }
 
 mod solve2 {
-    use std::cmp::Ordering;
+    use crate::{Card, Hand2, HandType};
     use itertools::Itertools;
-    use crate::{Card, HandType, Hand2};
+    use std::cmp::Ordering;
 
     pub fn solve2(lines: &Vec<String>) -> i64 {
         let mut hands: Vec<Hand2> = lines.iter().map(|it| Hand2::new(it)).collect();
@@ -188,7 +188,6 @@ mod solve2 {
             (_, Card::Two) => Ordering::Less,
             (Card::Jack, _) => Ordering::Greater,
         }
-        
     }
 }
 
@@ -306,5 +305,19 @@ mod tests {
         let input = read_file_as_vector("./files/test.txt").expect("Cannot read file.");
         let result = solve1::solve1(&input);
         assert_eq!(result, 6440);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = read_file_as_vector("./files/day7.txt").expect("Cannot read file.");
+        let result = solve2::solve2(&input);
+        assert_eq!(result, 247885995);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = read_file_as_vector("./files/test.txt").expect("Cannot read file.");
+        let result = solve2::solve2(&input);
+        assert_eq!(result, 5905);
     }
 }
