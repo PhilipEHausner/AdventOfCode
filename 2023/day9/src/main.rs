@@ -24,7 +24,29 @@ fn solve1(input: &Vec<Vec<i64>>) -> i64 {
     input.iter().map(|it| predict_series(it)).sum()
 }
 
+fn solve2(input: &Vec<Vec<i64>>) -> i64 {
+    input.iter().map(|it| predict_series_inverse(it)).sum()
+}
+
 fn predict_series(series: &Vec<i64>) -> i64 {
+    let differences = get_series_gradient(series);
+    differences
+        .iter()
+        .rev()
+        .skip(1)
+        .fold(0, |acc, v: &Vec<i64>| acc + v.last().unwrap())
+}
+
+fn predict_series_inverse(series: &Vec<i64>) -> i64 {
+    let differences = get_series_gradient(series);
+    differences
+        .iter()
+        .rev()
+        .skip(1)
+        .fold(0, |acc, v: &Vec<i64>| v.first().unwrap() - acc)
+}
+
+fn get_series_gradient(series: &Vec<i64>) -> Vec<Vec<i64>> {
     let mut differences = vec![series.clone()];
 
     loop {
@@ -37,14 +59,6 @@ fn predict_series(series: &Vec<i64>) -> i64 {
     }
 
     differences
-        .iter()
-        .rev()
-        .skip(1)
-        .fold(0, |acc, v: &Vec<i64>| acc + v.last().unwrap())
-}
-
-fn solve2(input: &Vec<Vec<i64>>) -> i64 {
-    1
 }
 
 #[cfg(test)]
@@ -63,5 +77,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 114);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day9.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 1026);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test2.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 5);
     }
 }
