@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
+use num_integer::lcm;
 use regex::Regex;
 use util::read_files::read_file_as_vector;
 
@@ -25,7 +26,30 @@ fn solve1(lines: &Vec<String>) -> i64 {
 }
 
 fn solve2(lines: &Vec<String>) -> i64 {
-    1
+    let nodes = Nodes::new(&lines);
+    let keys: Vec<&String> = nodes
+        .elements
+        .keys()
+        .filter(|it| it.ends_with('A'))
+        .collect();
+    let results: Vec<i64> = keys
+        .iter()
+        .map(|it| {
+            let mut subnodes = nodes.clone();
+            subnodes.current_node = it.to_string();
+            let mut steps = Steps::new(&lines[0]);
+            let mut result = 0;
+            loop {
+                if subnodes.current_node.ends_with('Z') {
+                    break;
+                }
+                subnodes.step(&mut steps);
+                result += 1;
+            }
+            result
+        })
+        .collect();
+    results.iter().fold(1, |acc, it| lcm(acc, *it))
 }
 
 enum Direction {
@@ -67,8 +91,9 @@ impl Steps {
     }
 }
 
+#[derive(Clone)]
 struct Nodes {
-    elements: HashMap<String, Node>,
+    pub elements: HashMap<String, Node>,
     current_node: String,
 }
 
@@ -114,6 +139,7 @@ impl Nodes {
     }
 }
 
+#[derive(Clone)]
 struct Node {
     name: String,
     left: String,
@@ -142,6 +168,20 @@ mod tests {
     fn test_solve1_testdata2() {
         let input = read_file_as_vector("./files/test2.txt").expect("Cannot read file.");
         let result = solve1(&input);
+        assert_eq!(result, 6);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = read_file_as_vector("./files/day8.txt").expect("Cannot read file.");
+        let result = solve2(&input);
+        assert_eq!(result, 10241191004509);
+    }
+
+    #[test]
+    fn test_solve2_testdata3() {
+        let input = read_file_as_vector("./files/test3.txt").expect("Cannot read file.");
+        let result = solve2(&input);
         assert_eq!(result, 6);
     }
 }
