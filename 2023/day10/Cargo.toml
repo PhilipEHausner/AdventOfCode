@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 util = { path = "../util" }
+geo = "0.27.0"
