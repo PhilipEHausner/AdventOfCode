@@ -27,8 +27,16 @@ fn get_input(file: &str) -> Input {
 }
 
 fn solve1(input: &Input) -> usize {
-    let se_x: HashMap<usize, usize> = get_space_expansion_x(input);
-    let se_y: HashMap<usize, usize> = get_space_expansion_y(input);
+    solve(input, 2)
+}
+
+fn solve2(input: &Input) -> usize {
+    solve(input, 1_000_000)
+}
+
+fn solve(input: &Input, expansion_factor: usize) -> usize {
+    let se_x: HashMap<usize, usize> = get_space_expansion_x(input, expansion_factor);
+    let se_y: HashMap<usize, usize> = get_space_expansion_y(input, expansion_factor);
     let galaxy_positions = get_galaxy_positions(input);
     galaxy_positions
         .iter()
@@ -39,12 +47,9 @@ fn solve1(input: &Input) -> usize {
             }
             let el1 = combination[0];
             let el2 = combination[1];
-            el1.0.abs_diff(el2.0)
-                + el1.1.abs_diff(el2.1)
-                + se_x
-                    .get(&el1.0)
-                    .unwrap()
-                    .abs_diff(*se_x.get(&el2.0).unwrap())
+            se_x.get(&el1.0)
+                .unwrap()
+                .abs_diff(*se_x.get(&el2.0).unwrap())
                 + se_y
                     .get(&el1.1)
                     .unwrap()
@@ -53,11 +58,13 @@ fn solve1(input: &Input) -> usize {
         .sum()
 }
 
-fn get_space_expansion_x(input: &Input) -> HashMap<usize, usize> {
+fn get_space_expansion_x(input: &Input, expansion_factor: usize) -> HashMap<usize, usize> {
     let mut curr = 0;
     let mut result = HashMap::new();
     for i in 0..input.len() {
         if input[i].iter().all(|el| el == &Space::Empty) {
+            curr += expansion_factor;
+        } else {
             curr += 1;
         }
         result.insert(i, curr);
@@ -65,7 +72,7 @@ fn get_space_expansion_x(input: &Input) -> HashMap<usize, usize> {
     result
 }
 
-fn get_space_expansion_y(input: &Input) -> HashMap<usize, usize> {
+fn get_space_expansion_y(input: &Input, expansion_factor: usize) -> HashMap<usize, usize> {
     let mut curr = 0;
     let mut result = HashMap::new();
 
@@ -76,6 +83,8 @@ fn get_space_expansion_y(input: &Input) -> HashMap<usize, usize> {
 
     col_iter.enumerate().for_each(|(i, col)| {
         if col.into_iter().all(|el| el == &Space::Empty) {
+            curr += expansion_factor;
+        } else {
             curr += 1;
         }
         result.insert(i, curr);
@@ -106,10 +115,6 @@ fn get_galaxy_positions(input: &Input) -> Vec<(usize, usize)> {
         .collect()
 }
 
-fn solve2(input: &Input) -> u64 {
-    1
-}
-
 #[derive(Debug, PartialEq, Eq)]
 enum Space {
     Empty,
@@ -126,7 +131,7 @@ mod tests {
     fn test_solve1() {
         let input = get_input("./files/day11.txt");
         let result = solve1(&input);
-        assert_eq!(result, 6800);
+        assert_eq!(result, 9563821);
     }
 
     #[test]
@@ -134,5 +139,26 @@ mod tests {
         let input = get_input("./files/test1.txt");
         let result = solve1(&input);
         assert_eq!(result, 374);
+    }
+
+    #[test]
+    fn test_solve_10_times_testdata() {
+        let input = get_input("./files/test1.txt");
+        let result = solve(&input, 10);
+        assert_eq!(result, 1030);
+    }
+
+    #[test]
+    fn test_solve_100_times_testdata() {
+        let input = get_input("./files/test1.txt");
+        let result = solve(&input, 100);
+        assert_eq!(result, 8410);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day11.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 827009909817);
     }
 }
