@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use util::read_files::read_file_as_vector;
 
 fn main() {
@@ -27,6 +29,36 @@ fn get_input(file: &str) -> Input {
 fn solve1(input: &Input) -> usize {
     let mut transposed = transpose(input);
     roll_stones_north(&mut transposed);
+    get_load(&transposed)
+}
+
+fn solve2(input: &Input) -> usize {
+    let mut transposed = transpose(input);
+
+    let mut cache = HashMap::new();
+    let mut steps = 0;
+    for i in 0..10000000 {
+        match cache.get(&transposed) {
+            Some(x) => {
+                steps = (1_000_000_000 - x) % (i - x) + x;
+                break;
+            }
+            None => (),
+        }
+        cache.insert(transposed.clone(), i);
+        for _ in 0..4 {
+            roll_stones_north(&mut transposed);
+            transposed = rotate_mat(transposed);
+        }
+    }
+
+    transposed = transpose(input);
+    for _ in 0..steps {
+        for _ in 0..4 {
+            roll_stones_north(&mut transposed);
+            transposed = rotate_mat(transposed);
+        }
+    }
     get_load(&transposed)
 }
 
@@ -66,8 +98,17 @@ fn get_load(input: &Input) -> usize {
         .sum()
 }
 
-fn solve2(input: &Input) -> usize {
-    1
+fn rotate_mat(input: Input) -> Input {
+    let mut result = vec![vec![Space::Block; input.len()]; input[0].len()];
+
+    let l = input[0].len();
+    for col in 0..input.len() {
+        for row in 0..input.len() {
+            result[l - row - 1][col] = input[col][row].clone();
+        }
+    }
+
+    result
 }
 
 fn transpose<T: Clone>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -99,3 +140,36 @@ impl std::fmt::Display for Space {
 }
 
 type Input = Vec<Vec<Space>>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_solve1() {
+        let input = get_input("./files/day14.txt");
+        let result = solve1(&input);
+        assert_eq!(result, 113525);
+    }
+
+    #[test]
+    fn test_solve1_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve1(&input);
+        assert_eq!(result, 136);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day14.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 101292);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 64);
+    }
+}
