@@ -32,34 +32,47 @@ fn get_input(file: &str) -> Vec<Pattern> {
 }
 
 fn solve1(patterns: &Vec<Pattern>) -> usize {
-    patterns.iter().map(|p| match_line(p)).sum()
+    patterns.iter().map(|p| match_line(p, &is_symmetric)).sum()
 }
 
-fn match_line(pattern: &Pattern) -> usize {
-    match match_horizontal_line(pattern) {
+fn solve2(patterns: &Vec<Pattern>) -> usize {
+    patterns.iter().map(|p| match_line(p, &is_smudged)).sum()
+}
+
+fn match_line(
+    pattern: &Pattern,
+    symmetry_f: &dyn Fn(&[Vec<Ground>], &[Vec<Ground>]) -> bool,
+) -> usize {
+    match match_horizontal_line(pattern, symmetry_f) {
         Some(x) => x * 100,
-        None => match match_vertical_line(pattern) {
+        None => match match_vertical_line(pattern, symmetry_f) {
             Some(x) => x,
             None => panic!("No symmetry found."),
-        }
+        },
     }
 }
 
-fn match_horizontal_line(pattern: &Pattern) -> Option<usize> {
+fn match_horizontal_line(
+    pattern: &Pattern,
+    symmetry_f: &dyn Fn(&[Vec<Ground>], &[Vec<Ground>]) -> bool,
+) -> Option<usize> {
     for i in 1..(pattern.len()) {
         let lines = i.min(pattern.len() - i);
         let top = &pattern[(i - lines)..i];
         let bot = &pattern[i..(i + lines)];
-        if is_symmetric(top, bot) {
-            return Some(i)
+        if symmetry_f(top, bot) {
+            return Some(i);
         }
     }
     None
 }
 
-fn match_vertical_line(pattern: &Pattern) -> Option<usize> {
+fn match_vertical_line(
+    pattern: &Pattern,
+    symmetry_f: &dyn Fn(&[Vec<Ground>], &[Vec<Ground>]) -> bool,
+) -> Option<usize> {
     let transposed = transpose(pattern);
-    match_horizontal_line(&transposed)
+    match_horizontal_line(&transposed, symmetry_f)
 }
 
 fn is_symmetric(top: &[Vec<Ground>], bot: &[Vec<Ground>]) -> bool {
@@ -67,8 +80,18 @@ fn is_symmetric(top: &[Vec<Ground>], bot: &[Vec<Ground>]) -> bool {
     top.iter().zip(bot.iter().rev()).all(|(v1, v2)| v1 == v2)
 }
 
-fn solve2(patterns: &Vec<Pattern>) -> usize {
-    1
+fn is_smudged(top: &[Vec<Ground>], bot: &[Vec<Ground>]) -> bool {
+    assert_eq!(top.len(), bot.len());
+    top.iter()
+        .zip(bot.iter().rev())
+        .map(|(v1, v2)| {
+            v1.iter()
+                .zip(v2.iter())
+                .map(|(x, y)| if x == y { 0 } else { 1 })
+                .sum::<usize>()
+        })
+        .sum::<usize>()
+        == 1
 }
 
 fn transpose<T: Clone>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
