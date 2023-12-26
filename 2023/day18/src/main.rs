@@ -1,8 +1,5 @@
 use core::panic;
-use std::{
-    collections::{HashSet, VecDeque},
-    ops,
-};
+use std::ops;
 
 use util::read_files::read_file_as_vector;
 
@@ -41,96 +38,94 @@ fn get_input(file: &str) -> Input {
 }
 
 fn solve1(input: &Input) -> usize {
-    let mut vertices = get_polygon_vertices(input);
-    vertices = translate_vertices_to_pos_coords(&vertices);
-    let enclosing = get_enclosing_fields(&vertices);
-    let total = get_total_fields(&vertices);
-    total - enclosing
+    let vertices = get_polygon_vertices(input);
+    solve(&vertices)
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let vertices = get_polygon_vertices_part2(input);
+    solve(&vertices)
 }
 
-fn get_polygon_vertices(input: &Input) -> HashSet<Coords> {
-    let mut vertices = HashSet::new();
+fn solve(vertices: &Vec<Coords>) -> usize {
+    assert!(vertices[0] == vertices[vertices.len() - 1]);
+    let area = get_area(vertices) as usize;
+    let boundary = get_boundary_length(vertices) as usize;
+    let inner = area - boundary / 2 + 1;
+    inner + boundary
+}
+
+fn get_polygon_vertices(input: &Input) -> Vec<Coords> {
+    let mut vertices = vec![];
     let mut current = Coords::new(0, 0);
-    vertices.insert(current);
+    vertices.push(current);
 
     input.iter().for_each(|step| {
         let s = match step.dir {
-            Direction::Up => Coords::up(),
-            Direction::Left => Coords::left(),
-            Direction::Down => Coords::down(),
-            Direction::Right => Coords::right(),
+            Direction::Up => Coords::up() * step.steps as i64,
+            Direction::Left => Coords::left() * step.steps as i64,
+            Direction::Down => Coords::down() * step.steps as i64,
+            Direction::Right => Coords::right() * step.steps as i64,
         };
-        (0..step.steps).for_each(|_| {
-            current += s;
-            vertices.insert(current);
-        });
+        current += s;
+        vertices.push(current);
     });
     vertices
 }
 
-fn translate_vertices_to_pos_coords(vertices: &HashSet<Coords>) -> HashSet<Coords> {
-    let trans_x = vertices.iter().map(|coord| coord.x).min().unwrap() - 1;
-    let trans_y = vertices.iter().map(|coord| coord.y).min().unwrap() - 1;
-    let t = Coords::new(trans_x, trans_y);
-    vertices.iter().map(|coord| *coord - t).collect()
+fn get_polygon_vertices_part2(input: &Input) -> Vec<Coords> {
+    let mut vertices = vec![];
+    let mut current = Coords::new(0, 0);
+    vertices.push(current);
+
+    input.iter().for_each(|step| {
+        let steps = i64::from_str_radix(&step.code[0..5], 16).unwrap();
+        let s = match step.code.chars().nth(5).unwrap() {
+            '0' => Coords::right() * steps,
+            '1' => Coords::down() * steps,
+            '2' => Coords::left() * steps,
+            '3' => Coords::up() * steps,
+            _ => panic!("Unknown direction."),
+        };
+        current += s;
+        vertices.push(current);
+    });
+    vertices
 }
 
-fn get_enclosing_fields(vertices: &HashSet<Coords>) -> usize {
-    let mut result = 0;
-    let mc = get_max_coords(&vertices) + Coords::new(1, 1);
+fn get_area(vertices: &Vec<Coords>) -> i64 {
+    let mut area = 0;
 
-    let mut visited = HashSet::new();
-    let mut queue = VecDeque::new();
-    let options = vec![
-        Coords::up(),
-        Coords::down(),
-        Coords::left(),
-        Coords::right(),
-    ];
-    queue.push_back(Coords::new(0, 0));
+    for i in 0..(vertices.len() - 1) {
+        let v1 = vertices[i];
+        let v2 = vertices[i + 1];
+        area += v1.x * v2.y - v1.y * v2.x;
+    }
+    area /= 2;
 
-    while let Some(next) = queue.pop_front() {
-        if visited.contains(&next)
-            || next.x < 0
-            || next.y < 0
-            || next.x > mc.x
-            || next.y > mc.y
-            || vertices.contains(&next)
-        {
-            continue;
-        }
-        result += 1;
-        options.iter().for_each(|c| queue.push_back(next + *c));
-        visited.insert(next);
+    area.abs()
+}
+
+fn get_boundary_length(vertices: &Vec<Coords>) -> i64 {
+    let mut boundary = 0;
+
+    for i in 0..(vertices.len() - 1) {
+        let v1 = vertices[i];
+        let v2 = vertices[i + 1];
+        boundary += ((v1.x - v2.x) + (v1.y - v2.y)).abs();
     }
 
-    result
-}
-
-fn get_total_fields(vertices: &HashSet<Coords>) -> usize {
-    let mc = get_max_coords(&vertices) + Coords::new(2, 2);
-    mc.x as usize * mc.y as usize
-}
-
-fn get_max_coords(vertices: &HashSet<Coords>) -> Coords {
-    Coords::new(
-        vertices.iter().map(|coord| coord.x).max().unwrap(),
-        vertices.iter().map(|coord| coord.y).max().unwrap(),
-    )
+    boundary
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Coords {
-    x: i32,
-    y: i32,
+    x: i64,
+    y: i64,
 }
 
 impl Coords {
-    pub fn new(x: i32, y: i32) -> Coords {
+    pub fn new(x: i64, y: i64) -> Coords {
         Coords { x, y }
     }
 
@@ -169,6 +164,17 @@ impl ops::Sub for Coords {
         Coords {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
+        }
+    }
+}
+
+impl ops::Mul<i64> for Coords {
+    type Output = Self;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        Coords {
+            x: self.x * rhs,
+            y: self.y * rhs,
         }
     }
 }
@@ -221,16 +227,23 @@ mod tests {
     }
 
     #[test]
+    fn test_solve1_testdata2() {
+        let input = get_input("./files/test2.txt");
+        let result = solve1(&input);
+        assert_eq!(result, 11);
+    }
+
+    #[test]
     fn test_solve2() {
         let input = get_input("./files/day18.txt");
         let result = solve2(&input);
-        assert_eq!(result, 1);
+        assert_eq!(result, 63806916814808);
     }
 
     #[test]
     fn test_solve2_testdata() {
         let input = get_input("./files/test.txt");
         let result = solve2(&input);
-        assert_eq!(result, 1);
+        assert_eq!(result, 952408144115);
     }
 }
