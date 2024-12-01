@@ -1,3 +1,5 @@
+use std::{collections::HashMap, ops::Add};
+
 use lazy_static::lazy_static;
 use regex::Regex;
 use util::read_files::read_file_as_vector;
@@ -33,11 +35,30 @@ fn solve1(input: &Input) -> i64 {
     first_list.sort();
     second_list.sort();
 
-    first_list.iter().zip(second_list.iter()).map(|it| (it.1 - it.0).abs()).sum()
+    first_list
+        .iter()
+        .zip(second_list.iter())
+        .map(|it| (it.1 - it.0).abs())
+        .sum()
 }
 
-fn solve2(input: &Input) -> usize {
-    1
+fn solve2(input: &Input) -> i64 {
+    let first_list: Vec<i64> = input.iter().map(|it| it.0).collect();
+    let second_list: Vec<i64> = input.iter().map(|it| it.1).collect();
+
+    let mut first_map: HashMap<&i64, i64> = HashMap::new();
+    first_list.iter().for_each(|it| {
+        let val = first_map.entry(it).or_insert(0).add(1);
+        first_map.insert(it, val);
+    });
+
+    let mut second_map: HashMap<&i64, i64> = HashMap::new();
+    second_list.iter().for_each(|it| {
+        let val = second_map.entry(it).or_insert(0).add(1);
+        second_map.insert(it, val);
+    });
+
+    first_map.iter().map(|it| *it.0 * it.1 * second_map.get(it.0).unwrap_or(&0)).sum()
 }
 
 type Input = Vec<(i64, i64)>;
