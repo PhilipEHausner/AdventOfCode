@@ -1,6 +1,5 @@
-use std::{collections::HashMap, ops::Add};
+use std::collections::HashMap;
 
-use lazy_static::lazy_static;
 use regex::Regex;
 use util::read_files::read_file_as_vector;
 
@@ -12,53 +11,44 @@ fn main() {
 
 fn get_input(filename: &str) -> Input {
     let lines = read_file_as_vector(filename).expect("Cannot read file.");
-    lazy_static! {
-        static ref re: Regex = Regex::new(r"(?<first>\d+)\s+(?<second>\d+)").unwrap();
-    }
-    lines
-        .iter()
-        .map(|line| {
-            re.captures(line).map(|capture| {
-                (
-                    capture["first"].parse::<i64>().unwrap(),
-                    capture["second"].parse::<i64>().unwrap(),
-                )
-            })
-        })
-        .map(|it| it.unwrap())
-        .collect()
+    let re: Regex = Regex::new(r"(?<first>\d+)\s+(?<second>\d+)").unwrap();
+
+    lines.iter().map(|line| parse_line(&re, line)).collect()
+}
+
+fn parse_line(re: &Regex, line: &str) -> (i64, i64) {
+    let captures = re.captures(line).unwrap();
+    let first = captures["first"].parse::<i64>().unwrap();
+    let second = captures["second"].parse::<i64>().unwrap();
+    (first, second)
 }
 
 fn solve1(input: &Input) -> i64 {
-    let mut first_list: Vec<i64> = input.iter().map(|it| it.0).collect();
-    let mut second_list: Vec<i64> = input.iter().map(|it| it.1).collect();
+    let mut first_list: Vec<_> = input.iter().map(|&(first, _)| first).collect();
+    let mut second_list: Vec<_> = input.iter().map(|&(_, second)| second).collect();
     first_list.sort();
     second_list.sort();
 
     first_list
         .iter()
         .zip(second_list.iter())
-        .map(|it| (it.1 - it.0).abs())
+        .map(|(&first, &second)| (second - first).abs())
         .sum()
 }
 
 fn solve2(input: &Input) -> i64 {
-    let first_list: Vec<i64> = input.iter().map(|it| it.0).collect();
-    let second_list: Vec<i64> = input.iter().map(|it| it.1).collect();
+    let mut first_map: HashMap<i64, i64> = HashMap::new();
+    let mut second_map: HashMap<i64, i64> = HashMap::new();
 
-    let mut first_map: HashMap<&i64, i64> = HashMap::new();
-    first_list.iter().for_each(|it| {
-        let val = first_map.entry(it).or_insert(0).add(1);
-        first_map.insert(it, val);
-    });
+    for &(first, second) in input {
+        *first_map.entry(first).or_insert(0) += 1;
+        *second_map.entry(second).or_insert(0) += 1;
+    }
 
-    let mut second_map: HashMap<&i64, i64> = HashMap::new();
-    second_list.iter().for_each(|it| {
-        let val = second_map.entry(it).or_insert(0).add(1);
-        second_map.insert(it, val);
-    });
-
-    first_map.iter().map(|it| *it.0 * it.1 * second_map.get(it.0).unwrap_or(&0)).sum()
+    first_map
+        .iter()
+        .map(|(&key, &count1)| key * count1 * second_map.get(&key).unwrap_or(&0))
+        .sum()
 }
 
 type Input = Vec<(i64, i64)>;
