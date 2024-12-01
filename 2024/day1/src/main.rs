@@ -62,3 +62,36 @@ fn solve2(input: &Input) -> i64 {
 }
 
 type Input = Vec<(i64, i64)>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_solve1() {
+        let input = get_input("./files/day1.txt");
+        let result = solve1(&input);
+        assert_eq!(result, 2264607);
+    }
+
+    #[test]
+    fn test_solve1_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve1(&input);
+        assert_eq!(result, 11);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day1.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 19457120);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 31);
+    }
+}
