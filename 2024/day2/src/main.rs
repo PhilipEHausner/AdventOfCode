@@ -1,3 +1,5 @@
+use std::alloc::alloc;
+
 use util::read_files::read_file_as_vector;
 
 fn main() {
@@ -29,22 +31,18 @@ fn is_safe(report: &Vec<i64>) -> bool {
 }
 
 fn is_strictly_rising(report: &Vec<i64>) -> bool {
-    (0..report.len() - 1)
-        .map(|i| report[i] < report[i + 1])
-        .all(|el| el)
+    report.windows(2).all(|w| w[0] < w[1])
 }
 
 fn is_strictly_decreasing(report: &Vec<i64>) -> bool {
-    (0..report.len() - 1)
-        .map(|i| report[i] > report[i + 1])
-        .all(|el| el)
+    report.windows(2).all(|w| w[0] > w[1])
 }
 
 fn differences_lower_than_three(report: &Vec<i64>) -> bool {
-    (0..report.len() - 1)
-        .map(|i| (report[i] - report[i + 1]).abs())
-        .map(|el| el <= 3)
-        .all(|el| el)
+    report
+        .windows(2)
+        .map(|w| (w[0] - w[1]).abs())
+        .all(|el| el <= 3)
 }
 
 fn solve2(input: &Input) -> usize {
