@@ -48,7 +48,25 @@ fn differences_lower_than_three(report: &Vec<i64>) -> bool {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    input
+        .iter()
+        .map(|report| is_roughly_safe(report))
+        .filter(|safe| *safe)
+        .count()
+}
+
+fn is_roughly_safe(report: &Vec<i64>) -> bool {
+    is_safe(report) || is_safe_with_one_exception(report)
+}
+
+fn is_safe_with_one_exception(report: &Vec<i64>) -> bool {
+    for i in 0..report.len() {
+        let temp = [&report[0..i], &report[i + 1..report.len()]].concat();
+        if is_safe(&temp) {
+            return true;
+        }
+    }
+    false
 }
 
 type Input = Vec<Vec<i64>>;
@@ -71,17 +89,17 @@ mod tests {
         assert_eq!(result, 2);
     }
 
-    //  #[test]
-    //  fn test_solve2() {
-    //      let input = get_input("./files/day1.txt");
-    //      let result = solve2(&input);
-    //      assert_eq!(result, 19457120);
-    //  }
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day2.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 476);
+    }
 
-    //  #[test]
-    //  fn test_solve2_testdata() {
-    //      let input = get_input("./files/test.txt");
-    //      let result = solve2(&input);
-    //      assert_eq!(result, 31);
-    //  }
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 4);
+    }
 }
