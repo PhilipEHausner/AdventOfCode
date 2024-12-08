@@ -1,4 +1,4 @@
-use std::i64;
+use std::{i64, usize};
 
 use util::read_files::read_file_as_vector;
 
@@ -79,7 +79,42 @@ fn find(input: &Input, x: usize, y: usize, dir: (i64, i64)) -> bool {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let height = input.len();
+    let width = input.first().unwrap().len();
+    let mut count = 0;
+
+    for x in 0..height {
+        for y in 0..width {
+            if x < height - 1 && x > 0 {
+                if y < width - 1 && y > 0 {
+                    let mut temp = 0;
+                    if is_mas(input, x, y, (1, 1)) {
+                        temp += 1;
+                    }
+                    if is_mas(input, x, y, (1, -1)) {
+                        temp += 1;
+                    }
+                    if is_mas(input, x, y, (-1, 1)) {
+                        temp += 1;
+                    }
+                    if is_mas(input, x, y, (-1, -1)) {
+                        temp += 1;
+                    }
+                    if temp > 1 {
+                        count += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    count
+}
+
+fn is_mas(input: &Input, x: usize, y: usize, dir: (i64, i64)) -> bool {
+    input[x][y] == 'A'
+        && input[(x as i64 - dir.0) as usize][(y as i64 - dir.1) as usize] == 'M'
+        && input[(x as i64 + dir.0) as usize][(y as i64 + dir.1) as usize] == 'S'
 }
 
 type Input = Vec<Vec<char>>;
@@ -92,7 +127,7 @@ mod tests {
     fn test_solve1() {
         let input = get_input("./files/day4.txt");
         let result = solve1(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 2427);
     }
 
     #[test]
@@ -100,5 +135,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 18);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day4.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 1900);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 9);
     }
 }
