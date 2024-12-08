@@ -13,10 +13,10 @@ fn get_input(filename: &str) -> Input {
 }
 
 fn solve1(input: &Input) -> i64 {
-    input.iter().map(|line| process_line(line)).sum()
+    input.iter().map(|line| process_line_part1(line)).sum()
 }
 
-fn process_line(line: &str) -> i64 {
+fn process_line_part1(line: &str) -> i64 {
     let re = Regex::new(r"mul\((?<first>\d+),(?<second>\d+)\)").unwrap();
 
     re.captures_iter(line)
@@ -28,8 +28,15 @@ fn process_line(line: &str) -> i64 {
         .sum()
 }
 
-fn solve2(input: &Input) -> usize {
-    1
+fn solve2(input: &Input) -> i64 {
+    process_line_part2(&input.join(""))
+}
+
+fn process_line_part2(line: &str) -> i64 {
+    let re = Regex::new(r"(^|do\(\)).*?(don't\(\)|$)").unwrap();
+    re.find_iter(line)
+        .map(|capture| process_line_part1(capture.as_str()))
+        .sum()
 }
 
 type Input = Vec<String>;
@@ -50,5 +57,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 161);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day3.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 83595109);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test2.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 48);
     }
 }
