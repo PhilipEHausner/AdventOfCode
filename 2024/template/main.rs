@@ -20,3 +20,22 @@ fn solve2(input: &Input) -> usize {
 }
 
 type Input = i64;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_solve1() {
+        let input = get_input("./files/day.txt");
+        let result = solve1(&input);
+        // assert_eq!(result, );
+    }
+
+    #[test]
+    fn test_solve1_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve1(&input);
+        // assert_eq!(result, );
+    }
+}
