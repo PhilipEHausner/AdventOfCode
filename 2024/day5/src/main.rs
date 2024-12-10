@@ -59,7 +59,36 @@ fn get_center_page(update: &Vec<usize>) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    input
+        .updates
+        .iter()
+        .filter(|update| !update_is_correctly_ordered(&input.orderings, &update))
+        .map(|update| order_update(&input.orderings, &update))
+        .map(|update| get_center_page(&update))
+        .sum()
+}
+
+fn order_update(orderings: &HashSet<(usize, usize)>, update: &Vec<usize>) -> Vec<usize> {
+    let mut result = Vec::with_capacity(update.len());
+
+    while result.len() < update.len() {
+        'outer: for i in 0..update.len() {
+            if result.contains(&update[i]) {
+                continue;
+            }
+            for j in 0..update.len() {
+                if result.contains(&update[j]) {
+                    continue;
+                }
+                if orderings.contains(&(update[j], update[i])) {
+                    continue 'outer;
+                }
+            }
+            result.push(update[i]);
+        }
+    }
+
+    result
 }
 
 struct Input {
@@ -83,5 +112,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 143);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day5.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 6085);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 123);
     }
 }
