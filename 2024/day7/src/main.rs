@@ -47,6 +47,10 @@ fn _is_possible(
         return current == result;
     }
 
+    if current > result {
+        return false;
+    }
+
     let n = numbers[0];
     let remaining = numbers[1..].to_vec();
     for op in ops {
@@ -59,8 +63,12 @@ fn _is_possible(
     false
 }
 
-fn solve2(input: &Input) -> usize {
-    1
+fn solve2(input: &Input) -> i64 {
+    input
+        .iter()
+        .filter(|eq| is_possible(eq.result, eq.numbers.clone(), &vec![plus, mul, concat]))
+        .map(|eq| eq.result)
+        .sum()
 }
 
 fn plus(p1: i64, p2: i64) -> i64 {
@@ -69,6 +77,10 @@ fn plus(p1: i64, p2: i64) -> i64 {
 
 fn mul(p1: i64, p2: i64) -> i64 {
     p1 * p2
+}
+
+fn concat(p1: i64, p2: i64) -> i64 {
+    (p1.to_string() + &p2.to_string()).parse().unwrap()
 }
 
 struct Equation {
@@ -94,5 +106,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 3749);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day7.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 95297119227552);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 11387);
     }
 }
