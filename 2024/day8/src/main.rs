@@ -57,7 +57,32 @@ fn get_antenna_position_map(input: &Input) -> HashMap<char, Vec<(i64, i64)>> {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let antennas = get_antenna_position_map(input);
+    let mut antinodes = HashSet::new();
+    let (height, width) = (input.len() as i64, input.first().unwrap().len() as i64);
+
+    for positions in antennas.values() {
+        for (i, &(x1, y1)) in positions.iter().enumerate() {
+            for &(x2, y2) in positions.iter().skip(i + 1) {
+                let (dx, dy) = (x2 - x1, y2 - y1);
+
+                for direction in [-1, 1] {
+                    let mut step = 0;
+                    loop {
+                        let (xn, yn) = (x1 + step * dx, y1 + step * dy);
+                        if (0..height).contains(&xn) && (0..width).contains(&yn) {
+                            antinodes.insert((xn, yn));
+                        } else {
+                            break;
+                        }
+                        step += direction;
+                    }
+                }
+            }
+        }
+    }
+
+    antinodes.len()
 }
 
 type Input = Vec<Vec<char>>;
@@ -78,5 +103,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 14);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day8.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 1077);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 34);
     }
 }
