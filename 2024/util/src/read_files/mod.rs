@@ -15,9 +15,12 @@ where
     P: AsRef<Path>,
 {
     let lines = read_lines(filename)?;
-    lines.collect()
+    let mut result: Vec<String> = lines.collect::<Result<_, _>>()?;
+    while result.last().map_or(false, |line| line.is_empty()) {
+        result.pop();
+    }
+    Ok(result)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -29,7 +32,13 @@ mod tests {
             .expect("File could not be read.")
             .map(|line| line.expect("Could not parse line."))
             .collect();
-        let results = vec!["abc".to_string(), "123".to_string(), "".to_string(), "abg12".to_string(), "$3".to_string()];
+        let results = vec![
+            "abc".to_string(),
+            "123".to_string(),
+            "".to_string(),
+            "abg12".to_string(),
+            "$3".to_string(),
+        ];
 
         assert_eq!(lines.len(), results.len());
         assert_eq!(vecs_equal(&lines, &results), true);
@@ -37,18 +46,30 @@ mod tests {
 
     #[test]
     fn test_read_file_as_vector() {
-        let lines: Vec<String> = read_file_as_vector("./testfiles/readFileTest.txt").expect("File could not be read.");
-        let results = vec!["abc".to_string(), "123".to_string(), "".to_string(), "abg12".to_string(), "$3".to_string()];
+        let lines: Vec<String> =
+            read_file_as_vector("./testfiles/readFileTest.txt").expect("File could not be read.");
+        let results = vec![
+            "abc".to_string(),
+            "123".to_string(),
+            "".to_string(),
+            "abg12".to_string(),
+            "$3".to_string(),
+        ];
 
         assert_eq!(lines.len(), results.len());
         assert_eq!(vecs_equal(&lines, &results), true);
     }
 
-    fn vecs_equal<T: std::fmt::Display + std::cmp::PartialEq>(vec1: &Vec<T>, vec2: &Vec<T>) -> bool {
+    fn vecs_equal<T: std::fmt::Display + std::cmp::PartialEq>(
+        vec1: &Vec<T>,
+        vec2: &Vec<T>,
+    ) -> bool {
         let it = vec1.iter().zip(vec2.iter());
 
         for (_, (x, y)) in it.enumerate() {
-            if *x != *y { return false; }
+            if *x != *y {
+                return false;
+            }
         }
 
         true
