@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::HashMap;
 
 use util::read_files::read_file_as_vector;
 
@@ -19,36 +19,46 @@ fn get_input(filename: &str) -> Input {
 }
 
 fn solve1(input: &Input) -> usize {
-    let mut current = input.clone();
+    solve(input, 25)
+}
 
-    for _ in 0..25 {
+fn solve2(input: &Input) -> usize {
+    solve(input, 75)
+}
+
+fn solve(input: &Input, steps: usize) -> usize {
+    let mut current: HashMap<u64, usize> = HashMap::new();
+    input
+        .iter()
+        .for_each(|&el| *current.entry(el).or_insert(0) += 1);
+
+    for i in 0..steps {
         current = step(&current);
     }
 
-    current.len()
+    current.values().sum()
 }
 
-fn solve2(_input: &Input) -> usize {
-    1
-}
+fn step(input: &HashMap<u64, usize>) -> HashMap<u64, usize> {
+    let mut out = HashMap::new();
 
-fn step(input: &Input) -> Input {
-    let mut new = Vec::new();
-    for &number in input {
+    for entry in input {
+        let number = *entry.0;
         if number == 0 {
-            new.push(1);
+            *out.entry(1).or_insert(0) += entry.1;
         } else if number.to_string().len() % 2 == 0 {
             let digits = number.to_string();
             let split = digits.len() / 2;
             let (first, last) = digits.split_at(split);
 
-            new.push(first.parse().unwrap());
-            new.push(last.parse().unwrap());
+            *out.entry(first.parse().unwrap()).or_insert(0) += entry.1;
+            *out.entry(last.parse().unwrap()).or_insert(0) += entry.1;
         } else {
-            new.push(number * 2024);
+            *out.entry(number * 2024).or_insert(0) += entry.1;
         }
     }
-    new
+
+    out
 }
 
 type Input = Vec<u64>;
@@ -69,5 +79,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 55312);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day11.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 207961583799296);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 65601038650482);
     }
 }
