@@ -8,4 +8,8 @@ edition = "2021"
 [dependencies]
 util = { path = "../util" }
 regex = "1.11.1"
+openblas-src = "0.10"
+ndarray = "0.14"
+ndarray-linalg = { version = "0.13", features = ["openblas-static"] }
+almost = "0.2.0"
 

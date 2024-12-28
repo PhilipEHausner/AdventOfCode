@@ -1,4 +1,5 @@
-use std::usize;
+use ndarray::prelude::*;
+use ndarray_linalg::Solve;
 
 use regex::Regex;
 use util::read_files::read_file_as_vector;
@@ -39,29 +40,37 @@ fn solve1(input: &Input) -> usize {
         .sum()
 }
 
-fn min_tokens(les: &LES) -> Result<usize, ()> {
-    let mut min_tokens = usize::MAX;
-
-    for a in 0..100 {
-        for b in 0..100 {
-            if les.x0 * a + les.x1 * b != les.xt {
-                continue;
-            }
-            if les.y0 * a + les.y1 * b != les.yt {
-                continue;
-            }
-            min_tokens = min_tokens.min(3 * a + b);
-        }
-    }
-
-    match min_tokens {
-        usize::MAX => Err(()),
-        n => Ok(n),
-    }
+fn solve2(input: &Input) -> usize {
+    input
+        .iter()
+        .map(|les| LES {
+            x0: les.x0,
+            x1: les.x1,
+            y0: les.y0,
+            y1: les.y1,
+            xt: les.xt + 10000000000000,
+            yt: les.yt + 10000000000000,
+        })
+        .map(|les| min_tokens(&les))
+        .map(|m| m.unwrap_or(0))
+        .sum()
 }
 
-fn solve2(input: &Input) -> usize {
-    1
+fn min_tokens(les: &LES) -> Result<usize, ()> {
+    let r: Array2<f64> = array![
+        [les.x0 as f64, les.x1 as f64],
+        [les.y0 as f64, les.y1 as f64]
+    ];
+    let t: Array1<f64> = array![les.xt as f64, les.yt as f64];
+    let s = r.solve_into(t).unwrap();
+
+    let (a, b) = (s[0].round() as usize, s[1].round() as usize);
+
+    if a * les.x0 + b * les.x1 == les.xt && a * les.y0 + b * les.y1 == les.yt {
+        Ok(3 * a + b)
+    } else {
+        Err(())
+    }
 }
 
 #[derive(Debug)]
@@ -92,5 +101,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 480);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day13.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 98080815200063);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 875318608908);
     }
 }
