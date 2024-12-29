@@ -1,4 +1,6 @@
-use std::usize;
+use std::collections::HashSet;
+use std::hash::Hash;
+use std::iter::FromIterator;
 
 use regex::Regex;
 use util::read_files::read_file_as_vector;
@@ -8,7 +10,7 @@ fn main() {
     let test_board_size = (11, 7);
     let day_board_size = (101, 103);
     println!("Solution part 1: {}", solve1(&input, &day_board_size));
-    println!("Solution part 2: {}", solve2(&input));
+    println!("Solution part 2: {}", solve2(&input, &day_board_size));
 }
 
 fn get_input(filename: &str) -> Input {
@@ -68,8 +70,41 @@ fn safety_factor(robots: &Input, board_size: &V2D) -> usize {
     quadrants.0 * quadrants.1 * quadrants.2 * quadrants.3
 }
 
-fn solve2(input: &Input) -> usize {
+fn solve2(input: &Input, board_size: &V2D) -> usize {
+    let mut robots = input.clone();
+
+    for i in 1..100000 {
+        robots
+            .iter_mut()
+            .for_each(|robot| robot.teleport(board_size));
+        let unique_positions: HashSet<_> = robots
+            .iter()
+            .map(|robot| (robot.pos.0, robot.pos.1))
+            .collect();
+        if unique_positions.len() == robots.len() {
+            println!("second = {}", i);
+            print_board(&robots, board_size);
+            break;
+        }
+    }
+
     1
+}
+
+fn print_board(robots: &Input, board_size: &V2D) {
+    for i in 0..board_size.0 {
+        for j in 0..board_size.1 {
+            if robots
+                .iter()
+                .any(|robot| robot.pos.0 == i && robot.pos.1 == j)
+            {
+                print!("*");
+            } else {
+                print!(" ");
+            }
+        }
+        println!();
+    }
 }
 
 type V2D = (i32, i32);
