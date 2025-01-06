@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{thread::current, usize};
+use std::collections::VecDeque;
 
 use util::read_files::read_file_as_vector;
 
@@ -127,10 +127,113 @@ fn sum_box_gps_coordinates(fields: &Fields) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let (mut fields, directions) = (gets_solve2_fields(&input.0.to_vec()), input.1.to_vec());
+
+    let mut robot_pos = get_robot_position_s2(&fields).unwrap();
+
+    for direction in directions {
+        robot_pos = move_solve2(&robot_pos, &mut fields, &direction);
+    }
+
+    sum_box_gps_coordinates_s2(&fields)
 }
 
-fn print_fields(fields: &Fields) {
+fn gets_solve2_fields(fields: &Fields) -> Vec<Vec<char>> {
+    fields
+        .iter()
+        .map(|line| {
+            line.iter()
+                .flat_map(|field| match field {
+                    Field::Wall => vec!['#', '#'],
+                    Field::Empty => vec!['.', '.'],
+                    Field::Box => vec!['[', ']'],
+                    Field::Robot => vec!['@', '.'],
+                })
+                .collect()
+        })
+        .collect()
+}
+
+fn get_robot_position_s2(fields: &Vec<Vec<char>>) -> Result<(usize, usize), ()> {
+    fields
+        .iter()
+        .enumerate()
+        .flat_map(|(i, line)| {
+            line.iter()
+                .enumerate()
+                .find_map(|(j, el)| if *el == '@' { Some((i, j)) } else { None })
+        })
+        .next()
+        .ok_or(())
+}
+
+fn move_solve2(
+    robot_pos: &(usize, usize),
+    fields: &mut Vec<Vec<char>>,
+    direction: &Direction,
+) -> (usize, usize) {
+    let mut visited: Vec<(usize, usize)> = Vec::from(vec![*robot_pos]);
+    let mut queue = VecDeque::from(vec![*robot_pos]);
+    let (dx, dy) = direction.to_vec();
+    let mut movement_possible = true;
+
+    while let Some((x, y)) = queue.pop_front() {
+        let (nx, ny) = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+        let field = fields[nx][ny];
+        match field {
+            '#' => {
+                movement_possible = false;
+                break;
+            }
+            '[' => {
+                if !visited.contains(&(nx, ny)) {
+                    visited.push((nx, ny));
+                    visited.push((nx, ny + 1));
+                    queue.push_back((nx, ny));
+                    queue.push_back((nx, ny + 1));
+                }
+            }
+            ']' => {
+                if !visited.contains(&(nx, ny)) {
+                    visited.push((nx, ny));
+                    visited.push((nx, ny - 1));
+                    queue.push_back((nx, ny));
+                    queue.push_back((nx, ny - 1));
+                }
+            }
+            '.' => {}
+            _ => panic!("Cannot happen. {} should not be present.", field),
+        }
+    }
+
+    if movement_possible {
+        for &(x, y) in visited.iter().rev() {
+            let (nx, ny) = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+            fields[nx][ny] = fields[x][y];
+            fields[x][y] = '.';
+        }
+        (
+            (robot_pos.0 as isize + dx) as usize,
+            (robot_pos.1 as isize + dy) as usize,
+        )
+    } else {
+        *robot_pos
+    }
+}
+
+fn sum_box_gps_coordinates_s2(fields: &Vec<Vec<char>>) -> usize {
+    fields
+        .iter()
+        .enumerate()
+        .flat_map(|(i, line)| {
+            line.iter()
+                .enumerate()
+                .map(move |(j, f)| if *f == '[' { 100 * i + j } else { 0 })
+        })
+        .sum()
+}
+
+fn print_fields<T: fmt::Display>(fields: &Vec<Vec<T>>) {
     fields.iter().for_each(|line| {
         line.iter().for_each(|c| print!("{}", c));
         println!();
@@ -202,5 +305,26 @@ mod tests {
         let input = get_input("./files/test_large.txt");
         let result = solve1(&input);
         assert_eq!(result, 10092);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day15.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 1511259);
+    }
+
+    #[test]
+    fn test_solve2_small_testdata() {
+        let input = get_input("./files/test_small.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 1751);
+    }
+
+    #[test]
+    fn test_solve2_large_testdata() {
+        let input = get_input("./files/test_large.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 9021);
     }
 }
