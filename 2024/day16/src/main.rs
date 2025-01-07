@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::usize;
 
 use util::read_files::read_file_as_vector;
 
@@ -71,7 +72,7 @@ where
     queue
         .entry(key)
         .and_modify(|existing| {
-            if value < *existing {
+            if value <= *existing {
                 *existing = value; // Update if the new value is lower
             }
         })
@@ -79,7 +80,93 @@ where
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let mut on_shortest_path = HashSet::new();
+    let start_pos = get_start_position(input).unwrap();
+    let mut queue: Vec<((usize, usize, Direction), (usize, HashSet<(usize, usize)>))> = vec![(
+        (start_pos.0, start_pos.1, Direction::East),
+        (0, HashSet::from([start_pos.clone()])),
+    )];
+    let mut shortest_path_value = None;
+
+    while let Some(next_node) = get_next_node_solve2(&mut queue) {
+        let (x, y, direction) = next_node.0;
+        let (curr_value, history) = next_node.1;
+        if input[x][y] == 'E' {
+            match shortest_path_value {
+                None => {
+                    shortest_path_value = Some(curr_value);
+                    history.clone().into_iter().for_each(|pos| {
+                        on_shortest_path.insert(pos);
+                    });
+                }
+                Some(val) => {
+                    if val == curr_value {
+                        history.clone().into_iter().for_each(|pos| {
+                            on_shortest_path.insert(pos);
+                        });
+                    }
+                }
+            }
+        }
+        for ((dx, dy, new_direction), penalty) in direction.vectors() {
+            let (nx, ny) = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+            if input[nx][ny] == '#' {
+                continue;
+            }
+            let new_value = curr_value + penalty + 1;
+            if let Some(val) = shortest_path_value {
+                if new_value > val {
+                    continue;
+                }
+            }
+            insert_if_lower_solve2(
+                &mut queue,
+                (nx, ny, new_direction),
+                new_value,
+                history.clone(),
+                (nx, ny),
+            );
+        }
+    }
+
+    on_shortest_path.len()
+}
+
+fn get_next_node_solve2(
+    queue: &mut Vec<((usize, usize, Direction), (usize, HashSet<(usize, usize)>))>,
+) -> Option<((usize, usize, Direction), (usize, HashSet<(usize, usize)>))> {
+    if let Some((index, _)) = queue
+        .iter()
+        .enumerate()
+        .min_by_key(|&(_, (_, value))| value.0)
+    {
+        Some(queue.remove(index))
+    } else {
+        None
+    }
+}
+
+fn insert_if_lower_solve2<T>(
+    queue: &mut Vec<(T, (usize, HashSet<(usize, usize)>))>,
+    key: T,
+    value: usize,
+    history: HashSet<(usize, usize)>,
+    pos: (usize, usize),
+) where
+    T: Eq + Hash,
+{
+    let mut new_history = history.clone();
+    new_history.insert(pos);
+
+    if let Some(existing) = queue.iter_mut().find(|entry| entry.0 == key) {
+        if value < existing.1 .0 {
+            existing.1 = (value, new_history);
+        } else if value == existing.1 .0 {
+            existing.1 .1.extend(new_history);
+        }
+    } else {
+        queue.push((key, (value, new_history)));
+    }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -142,5 +229,26 @@ mod tests {
         let input = get_input("./files/test_2.txt");
         let result = solve1(&input);
         assert_eq!(result, 11048);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day16.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 494);
+    }
+
+    #[test]
+    fn test_solve2_test_1_data() {
+        let input = get_input("./files/test_1.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 45);
+    }
+
+    #[test]
+    fn test_solve2_test_2_data() {
+        let input = get_input("./files/test_2.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 64);
     }
 }
