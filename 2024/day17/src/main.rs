@@ -146,13 +146,27 @@ mod tests {
     fn test_solve1() {
         let input = get_input("./files/day17.txt");
         let result = solve1(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, "1,7,2,1,4,1,5,4,0");
     }
 
     #[test]
     fn test_solve1_testdata() {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, "4,6,3,5,6,3,5,2,1,0");
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day17.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 37221261688308);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test2.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 117440);
     }
 }
