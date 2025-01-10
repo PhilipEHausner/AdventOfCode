@@ -1,8 +1,5 @@
 use core::panic;
-use std::{
-    ops::{BitXor, Div},
-    usize,
-};
+use std::ops::{BitXor, Div};
 
 use util::read_files::read_file_as_vector;
 
@@ -102,7 +99,35 @@ fn combo_operand(operand: usize, computer: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let mut candidates: Vec<u64> = vec![0];
+    let mut computer = input.clone();
+    let program_len = computer.program.len();
+
+    for i in 1..=program_len {
+        let expected_output = get_expected_output(&computer, i);
+        let mut new_candidates = vec![];
+        for candidate in candidates.iter() {
+            for j in 0..8 {
+                let new_candidate = candidate * 8 + j;
+                computer.reg_a = new_candidate as usize;
+                if solve1(&computer) == expected_output {
+                    new_candidates.push(new_candidate);
+                }
+            }
+        }
+        candidates = new_candidates;
+    }
+
+    *candidates.iter().min().unwrap_or(&0_u64) as usize
+}
+
+fn get_expected_output(computer: &Input, i: usize) -> String {
+    let program_len = computer.program.len();
+    computer.program[program_len - i..program_len]
+        .iter()
+        .map(|&el| el.to_string())
+        .collect::<Vec<String>>()
+        .join(",")
 }
 
 #[derive(Debug, Clone)]
