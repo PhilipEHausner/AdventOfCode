@@ -5,7 +5,7 @@ use util::read_files::read_file_as_vector;
 fn main() {
     let input = get_input("./files/day18.txt");
     println!("Solution part 1: {}", solve1(&input));
-    println!("Solution part 2: {}", solve2(&input));
+    println!("Solution part 2: {:?}", solve2(&input));
 }
 
 fn get_input(filename: &str) -> Input {
@@ -41,12 +41,30 @@ fn to_tuple(pair: Vec<usize>) -> (usize, usize) {
 }
 
 fn solve1(input: &Input) -> usize {
-    let size = input.size;
-    let mut grid = vec![vec![false; size.0]; size.1];
+    let mut grid = vec![vec![false; input.size.0]; input.size.1];
 
     for &byte in &input.bytes[0..input.num_bytes] {
         grid[byte.1][byte.0] = true;
     }
+
+    get_path_length(&grid).unwrap()
+}
+
+fn solve2(input: &Input) -> (usize, usize) {
+    let mut grid = vec![vec![false; input.size.0]; input.size.1];
+
+    for &byte in &input.bytes {
+        grid[byte.1][byte.0] = true;
+        if get_path_length(&grid).is_none() {
+            return (byte.0, byte.1);
+        }
+    }
+
+    panic!("Path is never blocked.")
+}
+
+fn get_path_length(grid: &Vec<Vec<bool>>) -> Option<usize> {
+    let size = (grid.len(), grid[0].len());
 
     let mut visited: HashSet<(usize, usize)> = HashSet::new();
     let mut queue = PrioQueue {
@@ -56,7 +74,7 @@ fn solve1(input: &Input) -> usize {
 
     while let Some(((x, y), distance)) = queue.next() {
         if (x, y) == end {
-            return distance;
+            return Some(distance);
         }
         visited.insert((x, y));
 
@@ -68,7 +86,7 @@ fn solve1(input: &Input) -> usize {
         }
     }
 
-    panic!("Cannot find path.");
+    None
 }
 
 fn get_directions(x: usize, y: usize, size: (usize, usize)) -> Vec<(isize, isize)> {
@@ -86,10 +104,6 @@ fn get_directions(x: usize, y: usize, size: (usize, usize)) -> Vec<(isize, isize
         directions.push((0, 1));
     }
     directions
-}
-
-fn solve2(input: &Input) -> usize {
-    1
 }
 
 fn print_grid(grid: &Vec<Vec<bool>>, visited: &HashSet<(usize, usize)>) {
@@ -158,5 +172,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 22);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day18.txt");
+        let result = solve2(&input);
+        assert_eq!(result, (8, 51));
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, (6, 1));
     }
 }
