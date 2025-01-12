@@ -1,4 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, HashSet},
+    usize,
+};
 
 use util::read_files::read_file_as_vector;
 
@@ -47,7 +51,7 @@ fn solve1(input: &Input) -> usize {
         grid[byte.1][byte.0] = true;
     }
 
-    get_path_length(&grid).unwrap()
+    get_path_length(&grid, input.size).unwrap()
 }
 
 fn solve2(input: &Input) -> (usize, usize) {
@@ -55,7 +59,7 @@ fn solve2(input: &Input) -> (usize, usize) {
 
     for &byte in &input.bytes {
         grid[byte.1][byte.0] = true;
-        if get_path_length(&grid).is_none() {
+        if get_path_length(&grid, input.size).is_none() {
             return (byte.0, byte.1);
         }
     }
@@ -63,25 +67,28 @@ fn solve2(input: &Input) -> (usize, usize) {
     panic!("Path is never blocked.")
 }
 
-fn get_path_length(grid: &Vec<Vec<bool>>) -> Option<usize> {
-    let size = (grid.len(), grid[0].len());
+fn get_path_length(grid: &Vec<Vec<bool>>, size: (usize, usize)) -> Option<usize> {
+    let (width, height) = size;
+    let end = (width - 1, height - 1);
+    let mut visited = vec![false; width * height];
+    let mut heap = BinaryHeap::new();
+    heap.push(Reverse((0, 0, 0)));
 
-    let mut visited: HashSet<(usize, usize)> = HashSet::new();
-    let mut queue = PrioQueue {
-        queue: HashMap::from([((0, 0), 0)]),
-    };
-    let end = (size.1 - 1, size.0 - 1);
-
-    while let Some(((x, y), distance)) = queue.next() {
+    while let Some(Reverse((distance, x, y))) = heap.pop() {
         if (x, y) == end {
             return Some(distance);
         }
-        visited.insert((x, y));
 
-        for (dx, dy) in get_directions(x, y, size) {
-            let (nx, ny) = ((x as isize + dx) as usize, (y as isize + dy) as usize);
-            if !grid[nx][ny] && !visited.contains(&(nx, ny)) {
-                queue.update((nx, ny), distance + 1);
+        let index = y * width + x;
+        if visited[index] {
+            continue;
+        };
+        visited[index] = true;
+
+        for (nx, ny) in get_neighbours(x, y, size) {
+            let n_index = ny * width + nx;
+            if !grid[nx][ny] && !visited[n_index] {
+                heap.push(Reverse((distance + 1, nx, ny)));
             }
         }
     }
@@ -89,21 +96,21 @@ fn get_path_length(grid: &Vec<Vec<bool>>) -> Option<usize> {
     None
 }
 
-fn get_directions(x: usize, y: usize, size: (usize, usize)) -> Vec<(isize, isize)> {
-    let mut directions = Vec::with_capacity(4);
+fn get_neighbours(x: usize, y: usize, size: (usize, usize)) -> Vec<(usize, usize)> {
+    let mut neighbours = Vec::with_capacity(4);
     if x > 0 {
-        directions.push((-1, 0));
+        neighbours.push((x - 1, y));
     }
     if y > 0 {
-        directions.push((0, -1));
+        neighbours.push((x, y - 1));
     }
     if x < size.0 - 1 {
-        directions.push((1, 0));
+        neighbours.push((x + 1, y));
     }
     if y < size.1 - 1 {
-        directions.push((0, 1));
+        neighbours.push((x, y + 1));
     }
-    directions
+    neighbours
 }
 
 fn print_grid(grid: &Vec<Vec<bool>>, visited: &HashSet<(usize, usize)>) {
@@ -118,33 +125,6 @@ fn print_grid(grid: &Vec<Vec<bool>>, visited: &HashSet<(usize, usize)>) {
             }
         }
         println!();
-    }
-}
-
-struct PrioQueue {
-    queue: HashMap<(usize, usize), usize>,
-}
-
-impl PrioQueue {
-    pub fn next(&mut self) -> Option<((usize, usize), usize)> {
-        let min_entry = self.queue.iter().min_by_key(|&(_, value)| value);
-        if let Some((&k, &v)) = min_entry {
-            self.queue.remove(&k);
-            Some((k, v))
-        } else {
-            None
-        }
-    }
-
-    pub fn update(&mut self, pos: (usize, usize), distance: usize) {
-        self.queue
-            .entry(pos)
-            .and_modify(|existing| {
-                if distance < *existing {
-                    *existing = distance;
-                }
-            })
-            .or_insert(distance);
     }
 }
 
