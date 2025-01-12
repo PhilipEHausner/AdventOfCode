@@ -1,9 +1,11 @@
+use std::usize;
+
 use cached::proc_macro::cached;
 use cached::SizedCache;
 use util::read_files::read_file_as_vector;
 
 fn main() {
-    let input = get_input("./files/day19.txt");
+    let input = get_input("./files/test.txt");
     println!("Solution part 1: {}", solve1(&input));
     println!("Solution part 2: {}", solve2(&input));
 }
@@ -56,7 +58,33 @@ fn design_is_valid(design: &str, patterns: &Vec<String>) -> bool {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let patterns = &input.patterns;
+
+    let mut result = 0;
+    for design in input.designs.iter() {
+        result += number_of_valid_arrangements(design, patterns);
+    }
+    result
+}
+
+#[cached(
+    ty = "SizedCache<String,usize>",
+    create = "{ SizedCache::with_size(10000) }",
+    convert = r#"{ format!("{:?}{:?}", design, patterns) }"#
+)]
+fn number_of_valid_arrangements(design: &str, patterns: &Vec<String>) -> usize {
+    if design.len() == 0 {
+        return 1;
+    }
+
+    let mut options = 0;
+    for pattern in patterns {
+        if design.starts_with(pattern) {
+            options += number_of_valid_arrangements(&design[pattern.len()..], patterns);
+        }
+    }
+
+    options
 }
 
 struct Input {
@@ -80,5 +108,19 @@ mod tests {
         let input = get_input("./files/test.txt");
         let result = solve1(&input);
         assert_eq!(result, 6);
+    }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day19.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 769668867512623);
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        assert_eq!(result, 16);
     }
 }
