@@ -34,7 +34,19 @@ fn solve1(input: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let mut input = input.clone();
+    let mut removed_rolls = 0;
+
+    loop {
+        let removable_rolls = get_removable_rolls(&input);
+        removed_rolls += removable_rolls.len();
+        if removable_rolls.len() == 0 {
+            break;
+        }
+        remove_rolls(&mut input, removable_rolls);
+    }
+
+    removed_rolls
 }
 
 fn num_neighbours(input: &Input, pos: (usize, usize)) -> usize {
@@ -69,9 +81,34 @@ fn num_neighbours(input: &Input, pos: (usize, usize)) -> usize {
         }
     }
 
-    //    println!("{}, {} -> {}", pos.0, pos.1, neighbours);
-
     neighbours
+}
+
+fn get_removable_rolls(input: &Input) -> Vec<(usize, usize)> {
+    input
+        .iter()
+        .enumerate()
+        .map(|(x, line)| {
+            line.iter()
+                .enumerate()
+                .map(|(y, _)| {
+                    if input[x][y] && num_neighbours(input, (x, y)) < 4 {
+                        vec![(x, y)]
+                    } else {
+                        vec![]
+                    }
+                })
+                .flatten()
+                .collect::<Vec<(usize, usize)>>()
+        })
+        .flatten()
+        .collect()
+}
+
+fn remove_rolls(input: &mut Input, removable_rolls: Vec<(usize, usize)>) {
+    for roll in removable_rolls {
+        input[roll.0][roll.1] = false;
+    }
 }
 
 type Input = Vec<Vec<bool>>;
@@ -98,13 +135,13 @@ mod tests {
     fn test_solve2() {
         let input = get_input("./files/day4.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 8277);
     }
 
     #[test]
     fn test_solve2_testdata() {
         let input = get_input("./files/test.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 43);
     }
 }
