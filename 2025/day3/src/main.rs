@@ -29,7 +29,13 @@ fn solve1(input: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    1
+    let mut result = 0;
+
+    for bank in input {
+        result += bank_output_joltage_general(bank, 12);
+    }
+
+    result
 }
 
 fn bank_output_joltage(bank: &Vec<u8>) -> usize {
@@ -50,6 +56,29 @@ fn bank_output_joltage(bank: &Vec<u8>) -> usize {
     }
 
     first as usize * 10 + second as usize
+}
+
+fn bank_output_joltage_general(bank: &Vec<u8>, num_elements: usize) -> usize {
+    let mut elements = vec![];
+
+    let mut start = 0;
+    for i in 0..num_elements {
+        let (idx, num) = bank[start..bank.len() - num_elements + i + 1]
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| {
+                if b > a {
+                    std::cmp::Ordering::Less
+                } else {
+                    std::cmp::Ordering::Greater
+                }
+            })
+            .unwrap();
+        start = start + idx + 1;
+        elements.push(*num as usize * 10usize.pow(num_elements as u32 - i as u32 - 1));
+    }
+
+    elements.iter().sum()
 }
 
 type Input = Vec<Vec<u8>>;
@@ -76,13 +105,13 @@ mod tests {
     fn test_solve2() {
         let input = get_input("./files/day3.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 169512729575727);
     }
 
     #[test]
     fn test_solve2_testdata() {
         let input = get_input("./files/test.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 3121910778619);
     }
 }
