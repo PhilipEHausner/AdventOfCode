@@ -38,4 +38,19 @@ mod tests {
         let result = solve1(&input);
         // assert_eq!(result, );
     }
+
+    #[test]
+    fn test_solve2() {
+        let input = get_input("./files/day.txt");
+        let result = solve2(&input);
+        // assert_eq!(result, );
+    }
+
+    #[test]
+    fn test_solve2_testdata() {
+        let input = get_input("./files/test.txt");
+        let result = solve2(&input);
+        // assert_eq!(result, );
+    }
 }
+
