@@ -17,7 +17,7 @@ fn get_input(filename: &str) -> Input {
             line.chars()
                 .map(|c| match c {
                     '.' => Space::Empty,
-                    'S' => Space::Start,
+                    'S' => Space::Beam(1),
                     '^' => Space::Split,
                     _ => panic!("Unknown char {}", c),
                 })
@@ -31,42 +31,77 @@ fn solve1(input: &Input) -> usize {
     let mut splits = 0;
 
     for tick_num in 0..(grid.len() - 1) {
-        splits += tick1(&mut grid, tick_num);
+        splits += tick(&mut grid, tick_num);
     }
 
     splits
 }
 
-fn tick1(grid: &mut Input, tick_num: usize) -> usize {
+fn solve2(input: &Input) -> usize {
+    let mut grid = input.clone();
+
+    for tick_num in 0..(grid.len() - 1) {
+        tick(&mut grid, tick_num);
+    }
+
+    grid.last()
+        .unwrap()
+        .iter()
+        .map(|s| match s {
+            Space::Beam(n) => *n,
+            Space::Empty | Space::Split => 0,
+        })
+        .sum::<u64>() as usize
+}
+
+fn tick(grid: &mut Input, tick_num: usize) -> usize {
     let mut splits = 0;
     if tick_num == grid.len() - 1 {
         return splits;
     }
     for column in 0..grid.get(tick_num).unwrap().len() {
         match grid[tick_num][column] {
-            Space::Beam | Space::Start => {
-                if grid[tick_num + 1][column] == Space::Split {
-                    splits += 1;
-                    if column > 0 && grid[tick_num + 1][column - 1] == Space::Empty {
-                        grid[tick_num + 1][column - 1] = Space::Beam;
-                    }
-                    if column < grid[tick_num + 1].len() - 1
-                        && grid[tick_num + 1][column + 1] == Space::Empty
-                    {
-                        grid[tick_num + 1][column + 1] = Space::Beam;
-                    }
-                } else if grid[tick_num + 1][column] == Space::Empty {
-                    grid[tick_num + 1][column] = Space::Beam;
+            Space::Beam(n) => match grid[tick_num + 1][column] {
+                Space::Beam(m) => {
+                    grid[tick_num + 1][column] = Space::Beam(m + n);
                 }
-            }
+                Space::Empty => {
+                    grid[tick_num + 1][column] = Space::Beam(n);
+                }
+                Space::Split => {
+                    splits += 1;
+                    if column > 0 {
+                        match grid[tick_num + 1][column - 1] {
+                            Space::Beam(m) => {
+                                grid[tick_num + 1][column - 1] = Space::Beam(m + n);
+                            }
+                            Space::Empty => {
+                                grid[tick_num + 1][column - 1] = Space::Beam(n);
+                            }
+                            Space::Split => {
+                                panic!("Assumption: Splits are never adjacent is violated.")
+                            }
+                        }
+                    }
+                    if column < grid[tick_num + 1].len() - 1 {
+                        match grid[tick_num + 1][column + 1] {
+                            Space::Beam(m) => {
+                                grid[tick_num + 1][column + 1] = Space::Beam(m + n);
+                            }
+                            Space::Empty => {
+                                grid[tick_num + 1][column + 1] = Space::Beam(n);
+                            }
+                            Space::Split => {
+                                panic!("Assumption: Splits are never adjacent is violated.")
+                            }
+                        }
+                    }
+                }
+            },
             Space::Empty | Space::Split => {}
         }
     }
     splits
-}
-
-fn solve2(input: &Input) -> usize {
-    1
 }
 
 #[allow(dead_code)]
@@ -81,19 +116,17 @@ fn print_grid(input: &Input) {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Space {
-    Beam,
+    Beam(u64),
     Empty,
     Split,
-    Start,
 }
 
 impl Space {
     fn to_char(self) -> char {
         match self {
-            Space::Beam => '|',
+            Space::Beam(_) => '|',
             Space::Empty => '.',
             Space::Split => '^',
-            Space::Start => 'S',
         }
     }
 }
@@ -122,13 +155,13 @@ mod tests {
     fn test_solve2() {
         let input = get_input("./files/day7.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 4509723641302);
     }
 
     #[test]
     fn test_solve2_testdata() {
         let input = get_input("./files/test.txt");
         let result = solve2(&input);
-        // assert_eq!(result, );
+        assert_eq!(result, 40);
     }
 }
